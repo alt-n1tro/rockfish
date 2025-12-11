@@ -29,3 +29,30 @@ fn main() {
     }
 
 }
+
+
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+    
+    #[test]
+    fn testing_empty_square_creation() {
+        let empty_square = pieces_logic::Piece {
+            color: false,
+            symbol: ' ',
+            has_moved: false,
+            value: 0, 
+            is_empty: true,
+            current_square: (0 as u8, 5 as u8),
+        };
+        assert_eq!(empty_square, pieces_logic::create_empty_piece((0 as u8, 5 as u8)));
+    }
+    
+
+
+}

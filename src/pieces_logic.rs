@@ -1,6 +1,4 @@
-use std::error::Error;
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Piece {
     pub color: bool,
     pub symbol: char,
