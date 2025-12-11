@@ -7,13 +7,20 @@ mod pieces_logic;
 
 fn main() {
     
-    let board = chess_board::initialize_chess_board();
+    let mut board = chess_board::initialize_chess_board();
 
 
     chess_board::print_chess_board(&board);
     
-    for x in [0, 13, 8, 34, 63, 10] {
-        let square = pieces_logic::get_2d_location_of_piece(x);
-        println!("{}, {}",square.0, square.1);
-    }
+
+    let move_: pieces_logic::Move = pieces_logic::Move {
+        current_square: (7, 1),
+        destination_square: (4, 4),
+    };
+    
+    pieces_logic::make_move(&mut board, &move_);
+    
+    chess_board::print_chess_board(&board);
+
+
 }
