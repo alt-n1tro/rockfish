@@ -36,33 +36,33 @@ pub fn get_2d_location_of_board_square(square: &u8) -> (u8, u8) {
 // 
 /// Takes a reference to the board (since we're just doing a lookup here).
 /// color = true (white) ; color = false (black)
-pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> Result<(u8, u8), &str> {
+pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
     if color {
         if board[7][4].symbol == 'K' {
-            return Ok((7 as u8, 4 as u8));
+            return (7 as u8, 4 as u8);
         }
         
         for x in (0..8).rev() {
             for y in (0..8).rev() {
                 if board[x][y].symbol == 'K' {
-                    return Ok((x as u8, y as u8));
+                    return (x as u8, y as u8);
                 }
             }
         }
-        Err("No White King was found...")
+        unreachable!("No White King was found...\nAt least 2 Kings MUST exist at all times!");
     } else {
         if board[0][4].symbol == 'k' {
-            return Ok((0 as u8, 4 as u8));
+            return (0 as u8, 4 as u8);
         }
         
         for x in 0..8 {
             for y in 0..8 {
                 if board[x][y].symbol == 'k' {
-                    return Ok((x as u8, y as u8));
+                    return (x as u8, y as u8);
                 }
             }
         }
-        Err("No Black King was found...")
+        unreachable!("No Black King was found...\nAt least 2 Kings MUST exist at all times!");
     }
 }
 
