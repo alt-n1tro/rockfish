@@ -21,11 +21,11 @@ pub fn print_chess_board(board_layout: &[[Piece;8];8]) {
 
 pub fn initialize_chess_board() -> [[Piece; 8]; 8] {
     
-    let mut ouput: [[Piece; 8]; 8] = [[create_empty_piece((0u8, 0u8)); 8]; 8];
+    let mut ouput: [[Piece; 8]; 8] = [[create_empty_piece(&(0u8, 0u8)); 8]; 8];
     
     for x in 2..6 {
         for y in 0..8 {
-            ouput[x][y] = create_empty_piece((x as u8, y as u8));
+            ouput[x][y] = create_empty_piece(&(x as u8, y as u8));
         }
     }
     
