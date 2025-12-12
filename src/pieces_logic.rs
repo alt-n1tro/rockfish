@@ -75,6 +75,48 @@ pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
 
 
 
+// This function looks outward from the king -- Not from the enemy pieces!
+pub fn is_king_in_check(board: &[[Piece;8];8], king_square: &(u8, u8)) -> bool {
+    
+    
+    let k_s: (isize, isize) = (king_square.0 as isize, king_square.1 as isize);
+    let king: Piece = board[k_s.0 as usize][k_s.1 as usize];
+
+
+    // Check knights
+    
+    let knight_moves: [(isize, isize); 8] = [(-2, -1), (-2, 1), // top
+                        (-1, -2), (1, -2), // left
+                        (2, -1), (2, 1), // bottom
+                        (1, 2),(-1, 2)]; // right
+
+    
+    for x in 0..knight_moves.len() {
+        let n_move = knight_moves[x];
+
+        let row = k_s.0 + n_move.0;
+        let col = k_s.1 + n_move.1;
+        if (row > 0 && row < 8) && (col > 0 && col < 8) {
+            let square = board[row as usize][col as usize];
+            if  (square.color != king.color) && 
+                (square.symbol == 'n' || square.symbol == 'N') {
+                return true;    
+            }
+        }  
+    }
+    
+
+
+    return false;
+}
+
+
+
+
+
+
+
+
 pub fn is_piece_pinned(board: &[[Piece;8];8], king_square: &(u8, u8), piece_square: &(u8, u8)) -> bool {
 
     // We need to make sure that the squares between king and piece are is_empty: true
@@ -108,7 +150,8 @@ pub fn is_piece_pinned(board: &[[Piece;8];8], king_square: &(u8, u8), piece_squa
             let mut row: usize = (king_square.0-1) as usize;
             let mut col: usize = (king_square.1+1) as usize;
 
-            // Checks if connection between king and piece is empty 
+            // Checks if connection between king and piece is empty
+            // Doesn't matter if the piece is friendly or not.
             while row > piece_square.0 as usize && col < piece_square.1 as usize {
                 if !board[row][col].is_empty {
                     return false;
@@ -126,26 +169,24 @@ pub fn is_piece_pinned(board: &[[Piece;8];8], king_square: &(u8, u8), piece_squa
                 let square: &Piece = &board[row][col];
 
                 if !square.is_empty {
-                    is_diagonal_empty = false;
 
                     // readability
                     let found_piece = &square;
 
                     if found_piece.color != king.color {
                         
-                        if match found_piece.symbol {
-                            'r' => true,
-                            'R' => true,
-                            'p' => true,
-                            'P' => true,
-                            'k' => true,
-                            'K' => true,
-                            _ => false,
-                        } {
-                            return false;
-                        } else {
-                            return true;
-                        }
+                        return match found_piece.symbol {
+                            'r' => false,
+                            'R' => false,
+                            'p' => false,
+                            'P' => false,
+                            'k' => false,
+                            'K' => false,
+                            'n' => false,
+                            'N' => false,
+                            _ => true,
+                        };
+                    
                     } else {
                         // If there is some other piece of the same color as our king between the
                         // piece and potentially some enemy piece (bishop/queen), we prematurely
@@ -156,9 +197,6 @@ pub fn is_piece_pinned(board: &[[Piece;8];8], king_square: &(u8, u8), piece_squa
                 }
                 row -= 1;
                 col += 1;
-            }
-            if is_diagonal_empty {
-                return false;
             }
         }
 
@@ -176,7 +214,7 @@ pub fn is_piece_pinned(board: &[[Piece;8];8], king_square: &(u8, u8), piece_squa
         // AND           x.0 < 0
         // THEN         piece is to the bottom right of the king.
         // THEREFORE    iterate by ->   king.0-1 , king.1-1
-        return true;
+        return false;
     }
     
     let vertical = x.1 == 0;
