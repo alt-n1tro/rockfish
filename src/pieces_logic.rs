@@ -111,45 +111,6 @@ pub fn place_king_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-pub fn create_empty_board() -> [[Piece; 8]; 8] {
-    let mut board: [[Piece;8]; 8] = [[create_empty_piece(&(0,0));8];8];
-
-    for x in 0..8 {
-        for y in 0..8 {
-            board[x][y] = create_empty_piece(&(x as u8, y as u8));
-        }
-    }
-    board
-}
-
-
-
-
-
 pub fn make_square_empty(board: &mut [[Piece; 8]; 8], square: &(u8, u8)) {
     let piece = create_empty_piece(&square);
     board[square.0 as usize][square.1 as usize] = piece;
@@ -200,26 +161,25 @@ pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
 
 
 // This function looks outward from the king -- Not from the enemy pieces!
-pub fn is_king_in_check(board: &[[Piece;8];8], king_square: &(u8, u8)) -> bool {
+pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     
-    
-    let k_s: (isize, isize) = (king_square.0 as isize, king_square.1 as isize);
+    let k_s: (u8, u8) = get_square_of_king(&board, color);
     let king: Piece = board[k_s.0 as usize][k_s.1 as usize];
 
 
     // Check knights
     
     let knight_moves: [(isize, isize); 8] = [(-2, -1), (-2, 1), // top
-                        (-1, -2), (1, -2), // left
-                        (2, -1), (2, 1), // bottom
-                        (1, 2),(-1, 2)]; // right
+        (-1, -2), (1, -2), // left
+        (2, -1), (2, 1), // bottom
+        (1, 2),(-1, 2)]; // right
 
     
     for x in 0..knight_moves.len() {
         let n_move = knight_moves[x];
 
-        let row = k_s.0 + n_move.0;
-        let col = k_s.1 + n_move.1;
+        let row = k_s.0 as isize + n_move.0;
+        let col = k_s.1 as isize + n_move.1;
         if (row > 0 && row < 8) && (col > 0 && col < 8) {
             let square = board[row as usize][col as usize];
             if  (square.color != king.color) && 
@@ -272,6 +232,10 @@ pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
 
         board[des_sq.0 as usize][des_sq.1 as usize] = board[cur_sq.0 as usize][cur_sq.1 as usize];
         board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
+        
+        board[des_sq.0 as usize][des_sq.1 as usize].current_square = des_sq;
+        board[des_sq.0 as usize][des_sq.1 as usize].has_moved = true;
+
 
     } else {
         println!("You are trying to make an Illegal move!\nAborting Program...");

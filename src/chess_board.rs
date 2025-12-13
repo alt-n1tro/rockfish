@@ -79,3 +79,15 @@ pub fn initialize_chess_board() -> [[Piece; 8]; 8] {
     }
     ouput
 }
+
+pub fn create_empty_board() -> [[Piece; 8]; 8] {
+    let mut board: [[Piece;8]; 8] = [[create_empty_piece(&(0,0));8];8];
+
+    for x in 0..8 {
+        for y in 0..8 {
+            board[x][y] = create_empty_piece(&(x as u8, y as u8));
+        }
+    }
+    board
+}
+
