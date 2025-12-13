@@ -1,3 +1,5 @@
+use self::pieces_logic::is_king_in_check;
+
 mod chess_board;
 mod pieces_logic;
 
@@ -43,6 +45,10 @@ fn main() {
     let x = pieces_logic::get_square_of_king(&board, true);
     
     println!("{}, {}", x.0, x.1);
+
+
+    let _ = is_king_in_check(&board, true);
+
 
 }
 
@@ -156,6 +162,67 @@ mod tests {
             assert!(pieces_logic::is_king_in_check(&board, false));
             board[row as usize][col as usize] = pieces_logic::create_empty_piece(&square);
         }
+    }
+
+    #[test]
+    fn is_king_in_check_straights_up_down() {
+        let mut board = chess_board::create_empty_board();
+        
+        // Rook
+        pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
+        pieces_logic::place_rook_on_board(&mut board, &(1, 4), true); // Enemy Rook
+
+        assert_eq!(true, pieces_logic::is_king_in_check(&board, false));
+        
+        pieces_logic::place_pawn_on_board(&mut board, &(2, 4), true);
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
+        
+        pieces_logic::place_pawn_on_board(&mut board, &(2, 4), false);
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
+        
+        board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
+        pieces_logic::place_rook_on_board(&mut board, &(1, 4), false); // Friendly Rook
+        
+        assert_eq!(false, is_king_in_check(&board, false));
+
+        // Queen 
+        board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
+        pieces_logic::place_queen_on_board(&mut board, &(1, 4), true); // Enemy Queen
+
+        assert_eq!(true, pieces_logic::is_king_in_check(&board, false));
+        
+        pieces_logic::place_pawn_on_board(&mut board, &(2, 4), true);
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
+        
+        pieces_logic::place_pawn_on_board(&mut board, &(2, 4), false);
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
+        
+        board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
+        pieces_logic::place_queen_on_board(&mut board, &(1, 4), false); // Friendly Queen
+        
+        assert_eq!(false, is_king_in_check(&board, false));
+
+        
+        // Test Bishop (will not produce check)
+
+        board = chess_board::create_empty_board();
+        
+        pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
+        pieces_logic::place_bishop_on_board(&mut board, &(1, 4), true); // Enemy Bishop
+
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
+    }
+
+    #[test]
+    fn is_king_in_check_left_right() {
+
+        assert!(false);
     }
 
 

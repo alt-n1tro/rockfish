@@ -8,6 +8,8 @@ pub struct Piece {
     pub current_square: (u8, u8),
 }
 
+
+// This should only ever be created via a function, that checks if the move is actually legal.
 pub struct Move {
     pub current_square: (u8, u8),
     pub destination_square: (u8, u8),
@@ -167,7 +169,8 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     let king: Piece = board[k_s.0 as usize][k_s.1 as usize];
 
 
-    // Check knights
+
+    // Check Knights
     
     let knight_moves: [(isize, isize); 8] = [(-2, -1), (-2, 1), // top
         (-1, -2), (1, -2), // left
@@ -188,6 +191,43 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
             }
         }  
     }
+
+    // Check Rook + Queen(straights)
+    
+    // Check Up+Down
+    let row = k_s.0;
+    let col = k_s.1;
+    for x in (0..row).rev().chain(row..8) {
+        let square = &board[x as usize][col as usize];
+        if !square.is_empty {
+            if king.color == square.color {
+                break; // We know some friendly piece is blocking the UP/DOWN straight!
+            } else {
+                if match square.symbol {
+                    'r' => true,
+                    'R' => true,
+                    'q' => true,
+                    'Q' => true,
+                    _ => false,
+                } {
+                    return true;
+                } else {
+                    break; // We know that an enemy piece could be blocking the a check!
+                }
+            }
+        }
+    }
+
+
+
+
+    // Check Bishop + Queen(diagonals)
+    
+
+    // Check Queen(close squares)
+    
+
+    // Check Pawns
     
 
 
