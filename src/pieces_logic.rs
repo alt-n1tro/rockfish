@@ -203,7 +203,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
 
 
 
-
+// Moves 
 
 // Piece specific move functions
 //pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
@@ -217,30 +217,16 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
 
 
 
-
-
-// Moves 
-pub fn check_legality_of_move(board: &[[Piece;8];8], move_: &Move) -> bool {true}
-
-
 pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
     
-    if check_legality_of_move(&board, &move_) {
+    let cur_sq = move_.current_square;
+    let des_sq = move_.destination_square;
 
-        let cur_sq = move_.current_square;
-        let des_sq = move_.destination_square;
-
-        board[des_sq.0 as usize][des_sq.1 as usize] = board[cur_sq.0 as usize][cur_sq.1 as usize];
-        board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
-        
-        board[des_sq.0 as usize][des_sq.1 as usize].current_square = des_sq;
-        board[des_sq.0 as usize][des_sq.1 as usize].has_moved = true;
-
-
-    } else {
-        println!("You are trying to make an Illegal move!\nAborting Program...");
-    }
-
+    board[des_sq.0 as usize][des_sq.1 as usize] = board[cur_sq.0 as usize][cur_sq.1 as usize];
+    board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
+    
+    board[des_sq.0 as usize][des_sq.1 as usize].current_square = des_sq;
+    board[des_sq.0 as usize][des_sq.1 as usize].has_moved = true;
 }
 
 
