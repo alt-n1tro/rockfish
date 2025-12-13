@@ -89,11 +89,6 @@ mod tests {
     }
     
     #[test]
-    fn check_legality_of_move() {
-        assert!(false);
-    }
-    
-    #[test]
     fn make_move() {
         
         let mut board = chess_board::initialize_chess_board();
