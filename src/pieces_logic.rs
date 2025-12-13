@@ -23,6 +23,130 @@ pub fn create_empty_piece(square: &(u8, u8)) -> Piece {
         current_square: *square }
 }
 
+pub fn place_pawn_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+    board[square.0 as usize][square.1 as usize] = Piece {
+        color: color,
+        symbol: match color {
+            false => 'p',
+            true => 'P',
+        },
+        has_moved: false,
+        value: 1,
+        is_empty: false,
+        current_square: *square
+    };
+
+}
+
+pub fn place_bishop_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+    board[square.0 as usize][square.1 as usize] = Piece {
+        color: color,
+        symbol: match color {
+            false => 'b',
+            true => 'B',
+        },
+        has_moved: false,
+        value: 3,
+        is_empty: false,
+        current_square: *square
+    };
+    
+}
+
+pub fn place_knight_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+    board[square.0 as usize][square.1 as usize] = Piece {
+        color: color,
+        symbol: match color {
+            false => 'n',
+            true => 'N',
+        },
+        has_moved: false,
+        value: 3,
+        is_empty: false,
+        current_square: *square
+    };
+}
+
+pub fn place_rook_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+    board[square.0 as usize][square.1 as usize] = Piece {
+        color: color,
+        symbol: match color {
+            false => 'r',
+            true => 'R',
+        },
+        has_moved: false,
+        value: 5,
+        is_empty: false,
+        current_square: *square
+    };
+}
+
+pub fn place_queen_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+    board[square.0 as usize][square.1 as usize] = Piece {
+        color: color,
+        symbol: match color {
+            false => 'q',
+            true => 'Q',
+        },
+        has_moved: false,
+        value: 9,
+        is_empty: false,
+        current_square: *square
+    };
+}
+
+pub fn place_king_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+    board[square.0 as usize][square.1 as usize] = Piece {
+        color: color,
+        symbol: match color {
+            false => 'k',
+            true => 'K',
+        },
+        has_moved: false,
+        value: 10000,
+        is_empty: false,
+        current_square: *square
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+pub fn create_empty_board() -> [[Piece; 8]; 8] {
+    let mut board: [[Piece;8]; 8] = [[create_empty_piece(&(0,0));8];8];
+
+    for x in 0..8 {
+        for y in 0..8 {
+            board[x][y] = create_empty_piece(&(x as u8, y as u8));
+        }
+    }
+    board
+}
+
+
 
 
 
