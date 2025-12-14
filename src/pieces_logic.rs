@@ -1,4 +1,4 @@
-use std::iter;
+use std::{iter, usize};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Piece {
@@ -185,7 +185,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
 
         let row = k_s.0 as isize + n_move.0;
         let col = k_s.1 as isize + n_move.1;
-        if (row > 0 && row < 8) && (col > 0 && col < 8) {
+        if (row >= 0 && row < 8) && (col >= 0 && col < 8) {
             let square = board[row as usize][col as usize];
             if  (square.color != king.color) && 
                 (square.symbol == 'n' || square.symbol == 'N') {
@@ -224,11 +224,112 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
 
     // Check Bishop + Queen(diagonals)
     
-
-    // Check Queen(close squares)
+    // top right -> (-1, 1)
+    // top left -> (-1, -1)
+    // bottom right -> (1, 1)
+    // bottom left -> (1, -1)
+    let mut top_right_row: i8 = k_s.0 as i8 - 1;
+    let mut top_right_col: i8 = k_s.1 as i8 + 1;
+    while top_right_row >= 0 && top_right_col < 8 {
+        let square = &board[top_right_row as usize][top_right_col as usize]; 
+        if !square.is_empty {
+            if king.color == square.color {
+                break; // We know some friendly piece is blocking the Top right diagonal!
+            } else {
+                if match square.symbol {
+                    'b' => true,
+                    'B' => true,
+                    'q' => true,
+                    'Q' => true,
+                    _ => false,
+                } {
+                    return true;
+                } else {
+                    break; // We know that an enemy piece could be blocking the a check!
+                }
+            }
+        }
+        top_right_row -= 1;
+        top_right_col += 1;
+    }
+    
+    let mut top_left_row: i8 = k_s.0 as i8 - 1;
+    let mut top_left_col: i8 = k_s.1 as i8 - 1;
+    while top_left_row >= 0 && top_left_col >= 0 {
+        let square = &board[top_left_row as usize][top_left_col as usize]; 
+        if !square.is_empty {
+            if king.color == square.color {
+                break; // We know some friendly piece is blocking the Top right diagonal!
+            } else {
+                if match square.symbol {
+                    'b' => true,
+                    'B' => true,
+                    'q' => true,
+                    'Q' => true,
+                    _ => false,
+                } {
+                    return true;
+                } else {
+                    break; // We know that an enemy piece could be blocking the a check!
+                }
+            }
+        }
+        top_left_row -= 1;
+        top_left_col -= 1;
+    }
     
 
-    // Check Pawns
+    let mut bottom_right_row: i8 = k_s.0 as i8 + 1;
+    let mut bottom_right_col: i8 = k_s.1 as i8 + 1;
+    while bottom_right_row < 8 && bottom_right_col < 8 {
+        let square = &board[bottom_right_row as usize][bottom_right_col as usize]; 
+        if !square.is_empty {
+            if king.color == square.color {
+                break; // We know some friendly piece is blocking the Top right diagonal!
+            } else {
+                if match square.symbol {
+                    'b' => true,
+                    'B' => true,
+                    'q' => true,
+                    'Q' => true,
+                    _ => false,
+                } {
+                    return true;
+                } else {
+                    break; // We know that an enemy piece could be blocking the a check!
+                }
+            }
+        }
+        bottom_right_row += 1;
+        bottom_right_col += 1;
+    }
+
+    let mut bottom_left_row: i8 = k_s.0 as i8 + 1;
+    let mut bottom_left_col: i8 = k_s.1 as i8 - 1;
+    while bottom_left_row < 8 && bottom_left_col >= 0 {
+        let square = &board[bottom_left_row as usize][bottom_left_col as usize]; 
+        if !square.is_empty {
+            if king.color == square.color {
+                break; // We know some friendly piece is blocking the Top right diagonal!
+            } else {
+                if match square.symbol {
+                    'b' => true,
+                    'B' => true,
+                    'q' => true,
+                    'Q' => true,
+                    _ => false,
+                } {
+                    return true;
+                } else {
+                    break; // We know that an enemy piece could be blocking the a check!
+                }
+            }
+        }
+        bottom_left_row += 1;
+        bottom_left_col -= 1;
+    }  
+
+    // Check Pawns 
     
 
 

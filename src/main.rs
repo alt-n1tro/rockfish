@@ -284,6 +284,41 @@ mod tests {
         assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
 
     }
+    
+
+    #[test]
+    fn is_king_in_check_diagonals() {
+        for tup in [(0, 0), (6, 6), (7, 1), (1, 7)] {
+        
+            for x in ['B', 'Q'] {
+            
+                let mut board = chess_board::create_empty_board();
+
+                pieces_logic::place_king_on_board(&mut board, &(4, 4), false);
+                
+                pieces_logic::place_pawn_on_board(&mut board, &tup, true);
+                board[tup.0 as usize][tup.1 as usize].symbol = x; // Little workaround for testing
+
+                assert_eq!(true, pieces_logic::is_king_in_check(&board, false));
+
+                for p in ['R', 'N'] {
+                    
+                    let mut row: u8 = (tup.0 + 4) >> 1;
+                    let col: u8 = (tup.1 + 4) >> 1;
+                    
+
+                    if tup == (7, 1) || tup == (1, 7) {
+                        row += 1;
+                    }
+
+                    pieces_logic::place_pawn_on_board(&mut board, &(row, col), true);
+                    board[row as usize][col as usize].symbol = p;
+                    assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
+                    
+                }
+            }
+        }
+    }
 
 
 
