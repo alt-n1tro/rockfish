@@ -1,3 +1,5 @@
+use std::iter;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Piece {
     pub color: bool,
@@ -193,15 +195,30 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     }
 
     // Check Rook + Queen(straights)
-    
     // Check Up+Down
+    // Check Left+Right
     let row = k_s.0;
     let col = k_s.1;
-    for x in (0..row).rev().chain(row..8) {
-        let square = &board[x as usize][col as usize];
+    
+    let mut cross_iterator: [(usize, usize); 14] = [(0,0);14];
+
+    for (x, val) in ((0..row).rev())
+                    .chain(row+1..8)
+                    .chain((0..col).rev())
+                    .chain(col+1..8)
+                    .enumerate() {
+        if x < 7 {
+            cross_iterator[x] = (val as usize, col as usize);
+        } else {
+            cross_iterator[x] = (row as usize, val as usize);
+        }
+    }
+
+    for (x, y) in cross_iterator {
+        let square = &board[x][y];
         if !square.is_empty {
             if king.color == square.color {
-                break; // We know some friendly piece is blocking the UP/DOWN straight!
+                break; // We know some friendly piece is blocking the U/D/L/R straight!
             } else {
                 if match square.symbol {
                     'r' => true,
@@ -217,9 +234,6 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
             }
         }
     }
-
-
-
 
     // Check Bishop + Queen(diagonals)
     
