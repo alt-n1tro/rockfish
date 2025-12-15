@@ -328,9 +328,31 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
         bottom_left_row += 1;
         bottom_left_col -= 1;
     }  
-
-    // Check Pawns 
     
+    
+
+    let black_pawns: [(i8, i8);2] = [((k_s.0 as i8 - 1), (k_s.1 as i8 + 1)),
+                                    ((k_s.0 as i8 - 1), (k_s.1 as i8 - 1))];
+    let white_pawns: [(i8, i8);2] = [((k_s.0 as i8 + 1), (k_s.1 as i8 + 1)),
+                                    ((k_s.0 as i8 + 1), (k_s.1 as i8 - 1))];
+    // Check Pawns 
+    if king.color {
+        for pawn in black_pawns {
+            if pawn.0 >= 0 && pawn.1 < 8 && pawn.1 >= 0{
+                if board[pawn.0 as usize][pawn.1 as usize].symbol == 'p' {
+                    return true;
+                }
+            } 
+        }
+    } else {
+        for pawn in white_pawns {
+            if pawn.0 < 8 && pawn.1 < 8 && pawn.1 >= 0{
+                if board[pawn.0 as usize][pawn.1 as usize].symbol == 'P' {
+                    return true;
+                }
+            } 
+        }
+    }
 
 
     return false;
@@ -354,8 +376,6 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
 //pub fn get_legal_moves_for_rook(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
-
-
 
 
 

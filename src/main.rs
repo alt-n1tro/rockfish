@@ -319,8 +319,23 @@ mod tests {
             }
         }
     }
+    
+    #[test]
+    fn is_king_in_check_pawns() {
+        
+        let mut board = chess_board::create_empty_board();
 
-
+        for color in [true, false] {
+            pieces_logic::place_king_on_board(&mut board, &(4, 4), color);
+            for pos in [(3,3, color), (3, 4, false), (3, 5, color),
+                        (4,3, false), (4, 5, false),
+                        (5,3, !color), (5, 4, false), (5, 5, !color)] {
+                pieces_logic::place_pawn_on_board(&mut board, &(pos.0, pos.1), !color);
+                assert_eq!(pos.2, pieces_logic::is_king_in_check(&board, color));
+                board[pos.0 as usize][pos.1 as usize] = pieces_logic::create_empty_piece(&(pos.0, pos.1));
+            }
+        }
+    }
 
 }
 
