@@ -373,6 +373,50 @@ mod tests {
 
     }
 
+
+    #[test]
+    fn get_legal_moves_for_knight() {
+        let mut board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_knight_on_board(&mut board, &(5, 5), true);
+
+        pieces_logic:: place_rook_on_board(&mut board, &(3, 6), false);
+        pieces_logic::place_rook_on_board(&mut board, &(4, 7), true);
+        chess_board::print_chess_board(&board);
+        
+        let mut exp_knight_moves: Vec<pieces_logic::Move> = vec![];
+
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (3, 6) });
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (3, 4) });
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (4, 3) });
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (6, 3) });
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (7, 6) });
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (6, 7) });
+        
+        let mut gen_knight_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_knight(&board, &(5, 5));
+
+        exp_knight_moves.sort();
+        gen_knight_moves.sort();
+
+        assert_eq!(exp_knight_moves, gen_knight_moves);
+    
+        // Pin the horse
+        board = chess_board::create_empty_board();
+         
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_knight_on_board(&mut board, &(6, 4), true);
+
+        pieces_logic::place_rook_on_board(&mut board, &(0, 4), false);
+
+        // No moves -- since pinned.
+        exp_knight_moves = vec![];
+        gen_knight_moves = pieces_logic::get_legal_moves_for_knight(&board, &(6, 4));
+
+        assert_eq!(exp_knight_moves, gen_knight_moves);
+
+    }
+
 }
 
 
