@@ -1,3 +1,5 @@
+use std::process::Output;
+
 use crate::chess_board;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -406,7 +408,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
                 output.push(up_move);
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty {
-                        let up_up_move: Move = Move { current_square: (square.0, square.1), destination_square: ((new_row + adder) as u8, square.1) };
+                        let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1) };
                         output.push(up_up_move); 
                     }
                 }
@@ -419,7 +421,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         if square.1 < 7 {
             let board_square = board[new_row as usize][(square.1 + 1) as usize];
             if board_square.color != piece_to_move.color && !board_square.is_empty {
-                let left_move: Move = Move { current_square: (square.0, square.1), destination_square: (new_row as u8, square.1 + 1)};
+                let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1)};
                 if !is_piece_pinned(&board, &left_move) {
                     output.push(left_move);
                 }
@@ -428,7 +430,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         if square.1 >= 1 {
             let board_square = board[new_row as usize][(square.1 - 1) as usize];
             if board_square.color != piece_to_move.color && !board_square.is_empty {
-                let right_move: Move = Move { current_square: (square.0, square.1), destination_square: (new_row as u8, square.1 - 1)};
+                let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1)};
                 if !is_piece_pinned(&board, &right_move) {
                     output.push(right_move);
                 }
@@ -438,7 +440,32 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
     output
 }
 
-//pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
+pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> { 
+    
+    let mut output: Vec<Move> = vec![];
+
+    let knight_moves: [(isize, isize); 8] = [
+        (-2, -1), (-2, 1), // top
+        (-1, -2), (1, -2), // left
+        (2, -1), (2, 1), // bottom
+        (1, 2),(-1, 2)]; // right
+    
+    for knight in knight_moves {
+        let row = knight.0 + square.0 as isize;
+        let col = knight.1 + square.1 as isize;
+        if row >= 0 && row < 8 && col >= 0 && col < 8 {
+            let to_sqr = board[row as usize][col as usize];
+            if to_sqr.is_empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) {
+                let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8)};
+                if !is_piece_pinned(&board, &knight_move) {
+                    output.push(knight_move);
+                }
+            }
+        }
+    }
+    output
+}
+
 //pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_rook(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
