@@ -1,4 +1,5 @@
-use std::{iter, usize};
+use std::thread::current;
+use std::usize;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Piece {
@@ -363,14 +364,78 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
 
 
 
-//pub fn is_piece_pinned(board: &[[Piece;8];8], king_square: &(u8, u8), piece_square: &(u8, u8)) -> bool {false}
+pub fn is_piece_pinned(board: &[[Piece;8];8], piece_move: &Move) -> bool {
+    
+    let from = piece_move.current_square;
+
+    let piece_to_move: Piece = board[from.0 as usize][from.1 as usize];
+    
+    let mut new_board = *board;
+
+    make_move(&mut new_board, piece_move);
+
+    !is_king_in_check(&new_board, piece_to_move.color)
+
+}
 
 
 
 // Moves 
 
 // Piece specific move functions
-//pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
+pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
+    
+    let mut output: Vec<Move> = vec![];
+        
+    let piece_to_move = board[square.0 as usize][square.1 as usize];
+
+    let adder: i8 = if piece_to_move.color {
+        -1
+    } else {
+        1
+    };
+    
+    let new_row = square.0 as i8 + adder;
+
+    if new_row >= 0 && new_row < 8 {
+
+        if board[new_row as usize][square.1 as usize].is_empty {
+            let up_move: Move = Move {current_square: (square.0, square.1), destination_square: (new_row as u8, square.1)};
+            if !is_piece_pinned(&board, &up_move) {
+                output.push(up_move);
+
+                if (new_row + adder) >= 0 && (new_row + adder) < 8 {
+                    if board[(new_row + adder) as usize][square.1 as usize].is_empty {
+                        let up_up_move: Move = Move { current_square: (square.0, square.1), destination_square: ((new_row + adder) as u8, square.1) };
+                        output.push(up_up_move); 
+                    }
+                }
+            }
+            
+            
+            
+        }
+        
+        if square.1 < 7 {
+            if board[new_row as usize][(square.1 + 1) as usize].color != piece_to_move.color {
+                let left_move: Move = Move { current_square: (square.0, square.1), destination_square: (new_row as u8, square.1 + 1)};
+                if !is_piece_pinned(&board, &left_move) {
+                    output.push(left_move);
+                }
+            }
+        }
+        if square.1 >= 1 {
+            if board[new_row as usize][(square.1 - 1) as usize].color != piece_to_move.color {
+                let right_move: Move = Move { current_square: (square.0, square.1), destination_square: (new_row as u8, square.1 - 1)};
+                if !is_piece_pinned(&board, &right_move) {
+                    output.push(right_move);
+                }
+            }
+        }
+    }
+    output
+}
+
 //pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_rook(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
