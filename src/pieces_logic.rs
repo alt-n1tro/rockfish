@@ -401,12 +401,9 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         println!("Reached #1");
 
         if board[new_row as usize][square.1 as usize].is_empty {
-            println!("Reached #2");
             let up_move: Move = Move {current_square: (square.0, square.1), destination_square: (new_row as u8, square.1)};
             if !is_piece_pinned(&board, &up_move) {
                 output.push(up_move);
-                println!("Reached #3");
-
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty {
                         let up_up_move: Move = Move { current_square: (square.0, square.1), destination_square: ((new_row + adder) as u8, square.1) };
@@ -420,7 +417,8 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         }
         
         if square.1 < 7 {
-            if board[new_row as usize][(square.1 + 1) as usize].color != piece_to_move.color {
+            let board_square = board[new_row as usize][(square.1 + 1) as usize];
+            if board_square.color != piece_to_move.color && !board_square.is_empty {
                 let left_move: Move = Move { current_square: (square.0, square.1), destination_square: (new_row as u8, square.1 + 1)};
                 if !is_piece_pinned(&board, &left_move) {
                     output.push(left_move);
@@ -428,7 +426,8 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
             }
         }
         if square.1 >= 1 {
-            if board[new_row as usize][(square.1 - 1) as usize].color != piece_to_move.color {
+            let board_square = board[new_row as usize][(square.1 - 1) as usize];
+            if board_square.color != piece_to_move.color && !board_square.is_empty {
                 let right_move: Move = Move { current_square: (square.0, square.1), destination_square: (new_row as u8, square.1 - 1)};
                 if !is_piece_pinned(&board, &right_move) {
                     output.push(right_move);
