@@ -1,5 +1,3 @@
-use self::pieces_logic::is_king_in_check;
-
 mod chess_board;
 mod pieces_logic;
 
@@ -47,7 +45,7 @@ fn main() {
     println!("{}, {}", x.0, x.1);
 
 
-    let _ = is_king_in_check(&board, true);
+    let _ = pieces_logic::is_king_in_check(&board, true);
 
 
 }
@@ -193,7 +191,7 @@ mod tests {
         pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
         pieces_logic::place_rook_on_board(&mut board, &(1, 4), false); // Friendly Rook
         
-        assert_eq!(false, is_king_in_check(&board, false));
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
 
         // Queen 
         board = chess_board::create_empty_board();
@@ -214,7 +212,7 @@ mod tests {
         pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
         pieces_logic::place_queen_on_board(&mut board, &(1, 4), false); // Friendly Queen
         
-        assert_eq!(false, is_king_in_check(&board, false));
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
 
         
         // Test Bishop (will not produce check)
@@ -249,7 +247,7 @@ mod tests {
         pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
         pieces_logic::place_rook_on_board(&mut board, &(4, 1), false); // Friendly Rook
         
-        assert_eq!(false, is_king_in_check(&board, false));
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
 
         // Queen 
         board = chess_board::create_empty_board();
@@ -271,7 +269,7 @@ mod tests {
         pieces_logic::place_king_on_board(&mut board, &(4, 4), false); // Friendly King
         pieces_logic::place_queen_on_board(&mut board, &(4, 1), false); // Friendly Queen
         
-        assert_eq!(false, is_king_in_check(&board, false));
+        assert_eq!(false, pieces_logic::is_king_in_check(&board, false));
 
         
         // Test Bishop (will not produce check)
@@ -335,6 +333,44 @@ mod tests {
                 board[pos.0 as usize][pos.1 as usize] = pieces_logic::create_empty_piece(&(pos.0, pos.1));
             }
         }
+    }
+
+    #[test]
+    fn is_piece_pinned_pawn() {
+        let mut board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_pawn_on_board(&mut board, &(6, 5), true);
+        pieces_logic::place_bishop_on_board(&mut board, &(4, 7), false);
+        
+        let pawn_move: pieces_logic::Move = pieces_logic::Move { current_square: (6, 5), destination_square: (5, 5) };
+
+        assert_eq!(true, pieces_logic::is_piece_pinned(&board, &pawn_move));
+        
+
+    }
+
+
+    #[test]
+    fn get_legal_moves_for_pawn() {
+        let mut board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_pawn_on_board(&mut board, &(6, 4), true);
+
+        let mut legal_moves: Vec<pieces_logic::Move> = vec![];
+
+        legal_moves.push(pieces_logic::Move {current_square: (6, 4), destination_square: (5, 4)}); 
+        legal_moves.push(pieces_logic::Move {current_square: (6, 4), destination_square: (4, 4)});
+
+        let mut gen_legal_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_pawn(&board, &(6, 4));
+        
+        legal_moves.sort(); 
+        gen_legal_moves.sort();
+
+        assert_eq!(legal_moves, gen_legal_moves);
+
+
     }
 
 }

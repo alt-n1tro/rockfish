@@ -1,7 +1,6 @@
-use std::thread::current;
-use std::usize;
+use crate::chess_board;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
     pub symbol: char,
@@ -13,6 +12,7 @@ pub struct Piece {
 
 
 // This should only ever be created via a function, that checks if the move is actually legal.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Move {
     pub current_square: (u8, u8),
     pub destination_square: (u8, u8),
@@ -374,7 +374,7 @@ pub fn is_piece_pinned(board: &[[Piece;8];8], piece_move: &Move) -> bool {
 
     make_move(&mut new_board, piece_move);
 
-    !is_king_in_check(&new_board, piece_to_move.color)
+    is_king_in_check(&new_board, piece_to_move.color)
 
 }
 
@@ -398,11 +398,14 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
     let new_row = square.0 as i8 + adder;
 
     if new_row >= 0 && new_row < 8 {
+        println!("Reached #1");
 
         if board[new_row as usize][square.1 as usize].is_empty {
+            println!("Reached #2");
             let up_move: Move = Move {current_square: (square.0, square.1), destination_square: (new_row as u8, square.1)};
             if !is_piece_pinned(&board, &up_move) {
                 output.push(up_move);
+                println!("Reached #3");
 
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty {
