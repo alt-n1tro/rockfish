@@ -190,8 +190,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
         let col = k_s.1 as isize + n_move.1;
         if (row >= 0 && row < 8) && (col >= 0 && col < 8) {
             let square = board[row as usize][col as usize];
-            if  (square.color != king.color) && 
-                (square.symbol == 'n' || square.symbol == 'N') {
+            if  (square.color != king.color) && matches!(square.symbol, 'n' | 'N') {
                 return true;    
             }
         }  
@@ -251,13 +250,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
                 if king.color == square.color {
                     break 'inner_while;
                 } else {
-                    if match square.symbol {
-                        'b' => true,
-                        'B' => true,
-                        'q' => true,
-                        'Q' => true,
-                        _ => false,
-                    } {
+                    if matches!(square.symbol, 'b' | 'B' | 'q' | 'Q') {
                         return true;
                     } else {
                         break 'inner_while;
