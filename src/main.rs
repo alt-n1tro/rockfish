@@ -425,8 +425,6 @@ mod tests {
         pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
         pieces_logic::place_bishop_on_board(&mut board, &(0, 0), true);
 
-        chess_board::print_chess_board(&board); 
-
         let mut bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0, 0));
         let mut exp_bishop_moves: Vec<pieces_logic::Move> = vec![];
 
@@ -488,9 +486,24 @@ mod tests {
         bishop_moves.sort();
         exp_bishop_moves.sort();
         
+        assert_eq!(bishop_moves, exp_bishop_moves);
+
+
+        board = chess_board::create_empty_board();
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_knight_on_board(&mut board, &(5, 3), false);
+        pieces_logic::place_bishop_on_board(&mut board, &(1, 7), true);
+
+        bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(1, 7));
+
+        exp_bishop_moves = vec![];
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (1, 7), destination_square: (5, 3)});
+        
         chess_board::print_chess_board(&board);
 
         assert_eq!(bishop_moves, exp_bishop_moves);
+
+
     }
     
 
