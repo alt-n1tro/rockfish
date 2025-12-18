@@ -579,22 +579,64 @@ mod tests {
 
     }
 
+    #[test]
+    fn get_legal_moves_for_queen() {
+
+        let mut board = chess_board::create_empty_board();
+
+        let mut expected_queen_moves: Vec<pieces_logic::Move> = vec![];
+        
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_queen_on_board(&mut board, &(4, 5), true);
+        
+        // Rook rays
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5)});
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 5)});
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7)});
+        
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 2)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 1)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 0)});
+
+        // Bishop rays
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 6)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 7)});
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 4)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 3)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 2)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 1)});
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 6)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 7)});
+
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 4)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 3)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 2)});
+
+
+        let mut queen_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_queen(&board, &(4, 5));
+
+        queen_moves.sort();
+        expected_queen_moves.sort();
+        
+        assert_eq!(queen_moves, expected_queen_moves);
+
+    }
+
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

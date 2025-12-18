@@ -455,7 +455,18 @@ pub fn get_legal_moves_for_rook(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
 
 
 
-//pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
+pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
+    
+    let mut output: Vec<Move> = get_legal_moves_for_rook(&board, &square);
+
+    output.extend(get_legal_moves_for_bishop(&board, &square));
+    
+
+    output
+
+}
+
+
 //pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 
 
