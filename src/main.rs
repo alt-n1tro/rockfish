@@ -58,6 +58,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use crate::pieces_logic::Move;
     use crate::*;
     
     #[test]
@@ -416,6 +417,42 @@ mod tests {
         assert_eq!(exp_knight_moves, gen_knight_moves);
 
     }
+
+    #[test]
+    fn get_legal_moves_for_bishop() {
+        let mut board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 1), true);
+        pieces_logic::place_bishop_on_board(&mut board, &(0, 0), true);
+
+        chess_board::print_chess_board(&board); 
+
+        let mut bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0, 0));
+        let mut exp_bishop_moves: Vec<pieces_logic::Move> = vec![];
+
+        for x in 1..8 {
+            exp_bishop_moves.push(pieces_logic::Move {current_square: (0, 0), destination_square: (x as u8, x as u8)});
+        }
+
+        bishop_moves.sort();
+        exp_bishop_moves.sort();
+
+        assert_eq!(&bishop_moves, &exp_bishop_moves);
+        
+        pieces_logic::place_rook_on_board(&mut board, &(7, 7), false);
+
+        bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0,0));
+        bishop_moves.sort();
+
+        chess_board::print_chess_board(&board);
+        
+        println!("{:?}", bishop_moves);
+        println!("{:?}", exp_bishop_moves);
+
+        assert_eq!(bishop_moves, [pieces_logic::Move {current_square: (0, 0), destination_square: (7, 7)}]);
+
+    }
+    
 
 }
 

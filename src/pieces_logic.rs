@@ -1,6 +1,6 @@
 use std::process::Output;
 
-use crate::chess_board;
+use crate::chess_board::{self, print_chess_board};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
@@ -229,109 +229,45 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     
     // top right -> (-1, 1)
     // top left -> (-1, -1)
-    // bottom right -> (1, 1)
+    // bottom right -> (1, 1) --> Check this.
     // bottom left -> (1, -1)
-    let mut top_right_row: i8 = k_s.0 as i8 - 1;
-    let mut top_right_col: i8 = k_s.1 as i8 + 1;
-    while top_right_row >= 0 && top_right_col < 8 {
-        let square = &board[top_right_row as usize][top_right_col as usize]; 
-        if !square.is_empty {
-            if king.color == square.color {
-                break; // We know some friendly piece is blocking the Top right diagonal!
-            } else {
-                if match square.symbol {
-                    'b' => true,
-                    'B' => true,
-                    'q' => true,
-                    'Q' => true,
-                    _ => false,
-                } {
-                    return true;
-                } else {
-                    break; // We know that an enemy piece could be blocking the a check!
-                }
-            }
-        }
-        top_right_row -= 1;
-        top_right_col += 1;
-    }
     
-    let mut top_left_row: i8 = k_s.0 as i8 - 1;
-    let mut top_left_col: i8 = k_s.1 as i8 - 1;
-    while top_left_row >= 0 && top_left_col >= 0 {
-        let square = &board[top_left_row as usize][top_left_col as usize]; 
-        if !square.is_empty {
-            if king.color == square.color {
-                break; // We know some friendly piece is blocking the Top right diagonal!
-            } else {
-                if match square.symbol {
-                    'b' => true,
-                    'B' => true,
-                    'q' => true,
-                    'Q' => true,
-                    _ => false,
-                } {
-                    return true;
-                } else {
-                    break; // We know that an enemy piece could be blocking the a check!
-                }
-            }
-        }
-        top_left_row -= 1;
-        top_left_col -= 1;
-    }
+    let bishop_moves = [(1, 1), (1, -1),
+                        (-1, 1), (-1, -1)];
     
+    for b_move in bishop_moves {
+        let mut bishop_row: i8 = k_s.0 as i8 + b_move.0;
+        let mut bishop_col: i8 = k_s.1 as i8+ b_move.1;
 
-    let mut bottom_right_row: i8 = k_s.0 as i8 + 1;
-    let mut bottom_right_col: i8 = k_s.1 as i8 + 1;
-    while bottom_right_row < 8 && bottom_right_col < 8 {
-        let square = &board[bottom_right_row as usize][bottom_right_col as usize]; 
-        if !square.is_empty {
-            if king.color == square.color {
-                break; // We know some friendly piece is blocking the Top right diagonal!
-            } else {
-                if match square.symbol {
-                    'b' => true,
-                    'B' => true,
-                    'q' => true,
-                    'Q' => true,
-                    _ => false,
-                } {
-                    return true;
-                } else {
-                    break; // We know that an enemy piece could be blocking the a check!
-                }
-            }
-        }
-        bottom_right_row += 1;
-        bottom_right_col += 1;
-    }
+        'inner_while: while bishop_row >= 0 && bishop_row < 8 && bishop_col >= 0 && bishop_col < 8 {
+            
+            let square = &board[bishop_row as usize][bishop_col as usize];
 
-    let mut bottom_left_row: i8 = k_s.0 as i8 + 1;
-    let mut bottom_left_col: i8 = k_s.1 as i8 - 1;
-    while bottom_left_row < 8 && bottom_left_col >= 0 {
-        let square = &board[bottom_left_row as usize][bottom_left_col as usize]; 
-        if !square.is_empty {
-            if king.color == square.color {
-                break; // We know some friendly piece is blocking the Top right diagonal!
-            } else {
-                if match square.symbol {
-                    'b' => true,
-                    'B' => true,
-                    'q' => true,
-                    'Q' => true,
-                    _ => false,
-                } {
-                    return true;
+            if !square.is_empty {
+                
+                if king.color == square.color {
+                    break 'inner_while;
                 } else {
-                    break; // We know that an enemy piece could be blocking the a check!
+                    if match square.symbol {
+                        'b' => true,
+                        'B' => true,
+                        'q' => true,
+                        'Q' => true,
+                        _ => false,
+                    } {
+                        return true;
+                    } else {
+                        break 'inner_while;
+                    }
                 }
+
             }
+
+            bishop_row += b_move.0;
+            bishop_col += b_move.1;
         }
-        bottom_left_row += 1;
-        bottom_left_col -= 1;
-    }  
-    
+
+    }
     
 
     let black_pawns: [(i8, i8);2] = [((k_s.0 as i8 - 1), (k_s.1 as i8 + 1)),
@@ -400,15 +336,21 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
     let new_row = square.0 as i8 + adder;
 
     if new_row >= 0 && new_row < 8 {
-        println!("Reached #1");
-
+        
         if board[new_row as usize][square.1 as usize].is_empty {
+            
             let up_move: Move = Move {current_square: (square.0, square.1), destination_square: (new_row as u8, square.1)};
+            
             if !is_piece_pinned(&board, &up_move) {
+            
                 output.push(up_move);
+                
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
+                
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty {
+                    
                         let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1) };
+                        
                         output.push(up_up_move); 
                     }
                 }
@@ -466,7 +408,38 @@ pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> V
     output
 }
 
-//pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
+pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
+    let bishop_moves: [(i8, i8); 4] = [(1, 1), (1, -1),
+                                       (-1, 1), (-1, -1)];
+    
+    let mut output: Vec<Move> = vec![];
+
+    for x in bishop_moves {
+        let mut row = square.0 as i8 + x.0;
+        let mut col = square.1 as i8 + x.1;
+        
+        while row >= 0 && row < 8 && col >= 0 && col < 8 {
+            if board[row as usize][col as usize].is_empty || (board[row as usize][col as usize].color != board[square.0 as usize][square.1 as usize].color) {
+
+                let b_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
+                let mut temp_board = board.clone();
+                make_move(&mut temp_board, &b_move);
+                print_chess_board(&temp_board);
+
+                if !is_piece_pinned(&board, &b_move) {
+                    output.push(b_move);
+                } 
+
+            } else {
+                break;
+            }
+            row += x.0;
+            col += x.1;
+        }
+    }
+    output
+}
+
 //pub fn get_legal_moves_for_rook(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
 //pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
