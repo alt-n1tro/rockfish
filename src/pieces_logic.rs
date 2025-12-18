@@ -405,13 +405,11 @@ pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> V
     output
 }
 
-pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
-    let bishop_moves: [(i8, i8); 4] = [(1, 1), (1, -1),
-                                       (-1, 1), (-1, -1)];
-    
+pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), moves: [(i8, i8); 4]) -> Vec<Move> {
+
     let mut output: Vec<Move> = vec![];
 
-    for x in bishop_moves {
+    for x in moves {
         let mut row = square.0 as i8 + x.0;
         let mut col = square.1 as i8 + x.1;
         
@@ -419,16 +417,16 @@ pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> V
             let destination_square = board[row as usize][col as usize];
             let piece_color = board[square.0 as usize][square.1 as usize].color;
             
-            let b_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
+            let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
 
-            if !is_piece_pinned(&board, &b_move) {
+            if !is_piece_pinned(&board, &proposed_move) {
 
                 if destination_square.is_empty {  
-                    output.push(b_move);
+                    output.push(proposed_move);
                  
                 } else {
                     if destination_square.color != piece_color {
-                        output.push(b_move);
+                        output.push(proposed_move);
                     }
                     break 'inner_while;
                 }
@@ -438,43 +436,23 @@ pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> V
         }
     }
     output
+
+}
+
+
+pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
+    let bishop_moves: [(i8, i8); 4] = [(1, 1), (1, -1),
+                                       (-1, 1), (-1, -1)];
+    get_legal_long_ray_moves(&board, &square, bishop_moves)    
 }
 
 pub fn get_legal_moves_for_rook(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
 
     let rook_moves: [(i8, i8); 4] = [(1, 0), (-1, 0),
                                      (0, 1), (0, -1)];
-    
-    let mut output: Vec<Move> = vec![];
-
-    for x in rook_moves {
-        let mut row = square.0 as i8 + x.0;
-        let mut col = square.1 as i8 + x.1;
-        
-        'inner_while: while row >= 0 && row < 8 && col >= 0 && col < 8 {
-            let destination_square = board[row as usize][col as usize];
-            let piece_color = board[square.0 as usize][square.1 as usize].color;
-            
-            let r_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
-
-            if !is_piece_pinned(&board, &r_move) {
-
-                if destination_square.is_empty {  
-                    output.push(r_move);
-                 
-                } else {
-                    if destination_square.color != piece_color {
-                        output.push(r_move);
-                    }
-                    break 'inner_while;
-                }
-            }
-            row += x.0;
-            col += x.1;
-        }
-    }
-    output
+    get_legal_long_ray_moves(&board, &square, rook_moves)    
 }
+
 
 
 //pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
