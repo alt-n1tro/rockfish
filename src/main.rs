@@ -438,19 +438,59 @@ mod tests {
         exp_bishop_moves.sort();
 
         assert_eq!(&bishop_moves, &exp_bishop_moves);
-        
+
         pieces_logic::place_rook_on_board(&mut board, &(7, 7), false);
-
-        bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0,0));
-        bishop_moves.sort();
-
-        chess_board::print_chess_board(&board);
-        
-        println!("{:?}", bishop_moves);
-        println!("{:?}", exp_bishop_moves);
+        bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0, 0));
 
         assert_eq!(bishop_moves, [pieces_logic::Move {current_square: (0, 0), destination_square: (7, 7)}]);
+        
+        exp_bishop_moves.pop();
 
+        pieces_logic::place_rook_on_board(&mut board, &(7, 7), true);
+        
+        bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0, 0));
+        bishop_moves.sort();
+
+        assert_eq!(exp_bishop_moves, bishop_moves);
+        
+        // --------CLEAR--------------
+        
+        exp_bishop_moves = vec![];
+
+        board = chess_board::create_empty_board();
+        
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_bishop_on_board(&mut board, &(4, 4), true);
+
+        
+        // top left
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 3)});
+        pieces_logic::place_rook_on_board(&mut board, &(3, 3), false);
+
+        // top right
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 5)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (2, 6)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (1, 7)});
+        
+        // bottom right 
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 5)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (6, 6)});
+        pieces_logic::place_rook_on_board(&mut board, &(7, 7), true);
+
+        // bottom left 
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 3)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (6, 2)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (7, 1)});
+        pieces_logic::place_knight_on_board(&mut board, &(7, 1), false);
+
+        bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(4, 4));
+        
+        bishop_moves.sort();
+        exp_bishop_moves.sort();
+        
+        chess_board::print_chess_board(&board);
+
+        assert_eq!(bishop_moves, exp_bishop_moves);
     }
     
 

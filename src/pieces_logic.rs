@@ -1,4 +1,5 @@
 use std::process::Output;
+use std::usize;
 
 use crate::chess_board::{self, print_chess_board};
 
@@ -414,20 +415,23 @@ pub fn get_legal_moves_for_bishop(board: &[[Piece;8];8], square: &(u8, u8)) -> V
         let mut row = square.0 as i8 + x.0;
         let mut col = square.1 as i8 + x.1;
         
-        while row >= 0 && row < 8 && col >= 0 && col < 8 {
-            if board[row as usize][col as usize].is_empty || (board[row as usize][col as usize].color != board[square.0 as usize][square.1 as usize].color) {
+        'inner_while: while row >= 0 && row < 8 && col >= 0 && col < 8 {
+            let dest_sqr = board[row as usize][col as usize];
+            let piece_color = board[square.0 as usize][square.1 as usize].color;
+            
+            let b_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
 
-                let b_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
-                let mut temp_board = board.clone();
-                make_move(&mut temp_board, &b_move);
-                print_chess_board(&temp_board);
+            if !is_piece_pinned(&board, &b_move) {
 
-                if !is_piece_pinned(&board, &b_move) {
+                if dest_sqr.is_empty {  
                     output.push(b_move);
-                } 
-
-            } else {
-                break;
+                 
+                } else {
+                    if dest_sqr.color != piece_color {
+                        output.push(b_move);
+                    }
+                    break 'inner_while;
+                }
             }
             row += x.0;
             col += x.1;
