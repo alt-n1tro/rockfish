@@ -200,33 +200,36 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     // Check Rook + Queen(straights)
     // Check Up+Down
     // Check Left+Right
-    let row = k_s.0;
-    let col = k_s.1;
-    for (x, y) in (0..row).rev().chain(row+1..8).map(|num| {(num as usize, col as usize)})
-                                .chain((0..col).rev().chain(col+1..8)
-                                .map(|num| {(row as usize, num as usize)})) {
-        let square = &board[x][y];
-        if !square.is_empty {
-            if king.color == square.color {
-                break; // We know some friendly piece is blocking the U/D/L/R straight!
-            } else {
-                if match square.symbol {
-                    'r' => true,
-                    'R' => true,
-                    'q' => true,
-                    'Q' => true,
-                    _ => false,
-                } {
-                    return true;
+    
+
+    let rook_moves = [(-1, 0), (1, 0),
+                      (0, -1), (0, 1)];
+    
+    for rook_move in rook_moves {
+        let mut row = k_s.0 as i8 + rook_move.0;
+        let mut col = k_s.1 as i8 + rook_move.1;
+
+        'inner_while: while row >= 0 && row < 8 && col >= 0 && col < 8 {
+            
+            let square = &board[row as usize][col as usize];
+
+            if !square.is_empty {
+                if king.color == square.color {
+                    break 'inner_while;
                 } else {
-                    break; // We know that an enemy piece could be blocking the a check!
+                    if matches!(square.symbol, 'r' | 'R' | 'q' | 'Q') {
+                        return true;
+                    } else {
+                        break 'inner_while;
+                    }
                 }
             }
+            row += rook_move.0;
+            col += rook_move.1;
         }
     }
 
     // Check Bishop + Queen(diagonals)
-    
     // top right -> (-1, 1)
     // top left -> (-1, -1)
     // bottom right -> (1, 1) --> Check this.

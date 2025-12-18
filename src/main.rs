@@ -422,7 +422,7 @@ mod tests {
     fn get_legal_moves_for_bishop() {
         let mut board = chess_board::create_empty_board();
 
-        pieces_logic::place_king_on_board(&mut board, &(7, 1), true);
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
         pieces_logic::place_bishop_on_board(&mut board, &(0, 0), true);
 
         chess_board::print_chess_board(&board); 
