@@ -58,7 +58,6 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::pieces_logic::Move;
     use crate::*;
     
     #[test]
@@ -632,8 +631,53 @@ mod tests {
         queen_moves.sort();
         expected_queen_moves.sort();
         
-        assert_eq!(queen_moves, expected_queen_moves);
+        assert_eq!(queen_moves, expected_queen_moves); 
 
+    }
+
+    #[test]
+    fn get_legal_moves_for_king() {
+        let mut board = chess_board::initialize_chess_board();
+        
+        let mut king_moves = pieces_logic::get_legal_moves_for_king(&board, &(7, 4));
+        assert_eq!(king_moves, []);
+
+        board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(4, 4), true);
+        
+        let mut expected_king_moves: Vec<pieces_logic::Move> = vec![];
+
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 5)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 4)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 3)});
+
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (4, 5)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (4, 3)});
+        
+        pieces_logic::place_rook_on_board(&mut board, &(3, 0), false);
+        
+        king_moves = pieces_logic::get_legal_moves_for_king(&board, &(4, 4));
+        
+        king_moves.sort();
+        expected_king_moves.sort();
+
+        assert_eq!(king_moves, expected_king_moves);
+
+        board[3][0] = pieces_logic::create_empty_piece(&(3, 0));
+
+
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 5)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 4)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 3)});
+
+        king_moves = pieces_logic::get_legal_moves_for_king(&board, &(4, 4));
+
+        king_moves.sort();
+        expected_king_moves.sort();
+
+        assert_eq!(king_moves, expected_king_moves);
+         
     }
 
 

@@ -1,7 +1,9 @@
+use core::borrow;
 use std::process::Output;
 use std::usize;
 
 use crate::chess_board::{self, print_chess_board};
+use crate::pieces_logic;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
@@ -336,7 +338,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         
         if board[new_row as usize][square.1 as usize].is_empty {
             
-            let up_move: Move = Move {current_square: (square.0, square.1), destination_square: (new_row as u8, square.1)};
+            let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1)};
             
             if !is_piece_pinned(&board, &up_move) {
             
@@ -461,13 +463,43 @@ pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Ve
 
     output.extend(get_legal_moves_for_bishop(&board, &square));
     
-
     output
-
 }
 
 
-//pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {}
+pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
+    
+    let king_moves: [(i8, i8); 8] = [(1, 1), (1, 0), (1, -1),
+                                     (0, 1), (0, -1),
+                                     (-1, 1), (-1, 0), (-1, -1)];
+    
+    let mut output: Vec<Move> = vec![];
+
+    for king_move in king_moves {
+        let row: i8 = square.0 as i8 + king_move.0;
+        let col: i8 = square.1 as i8 + king_move.1;
+        
+        if row >= 0 && row < 8 && col >= 0 && col < 8 {
+            let board_square = board[row as usize][col as usize];
+            let piece_square = board[square.0 as usize][square.1 as usize];
+
+            let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
+            
+            if board_square.is_empty {
+                if !is_piece_pinned(&board, &k_move) {
+                    output.push(k_move);
+                }
+            } else {
+                if board_square.color != piece_square.color && !is_piece_pinned(&board, &k_move) {
+                    output.push(k_move);
+                }
+            }
+        }
+    }
+    
+    output
+
+}
 
 
 
