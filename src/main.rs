@@ -737,6 +737,29 @@ mod tests {
 
     }
 
+    #[test]
+    fn is_stalemate() { 
+        let mut board = chess_board::create_empty_board();
+        
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_rook_on_board(&mut board, &(0, 3), false);
+        pieces_logic::place_rook_on_board(&mut board, &(0, 5), false);
+        pieces_logic::place_rook_on_board(&mut board, &(6, 0), false);
+
+        assert_eq!(true, pieces_logic::is_stalemate(&board, true));
+        
+        pieces_logic::place_pawn_on_board(&mut board, &(3, 0), true);
+
+        assert_eq!(false, pieces_logic::is_stalemate(&board, true));
+    
+        pieces_logic::place_knight_on_board(&mut board, &(2, 0), false);
+
+        assert_eq!(true, pieces_logic::is_stalemate(&board, true));
+
+
+
+    }
+
 }
 
 
