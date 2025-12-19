@@ -1,11 +1,3 @@
-use core::borrow;
-use std::intrinsics::unreachable;
-use std::process::Output;
-use std::usize;
-
-use crate::chess_board::{self, print_chess_board};
-use crate::pieces_logic;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
@@ -347,7 +339,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
                 
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
                 
-                    if board[(new_row + adder) as usize][square.1 as usize].is_empty {
+                    if board[(new_row + adder) as usize][square.1 as usize].is_empty && !piece_to_move.has_moved {
                     
                         let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1) };
                         
@@ -535,11 +527,30 @@ pub fn find_all_legal_moves_for_a_piece(board: &[[Piece; 8]; 8], square: &(u8, u
 
 }
 
-//pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: bool) -> Vec<Move> {}
+pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: bool) -> Vec<Move> {
+
+    let mut output: Vec<Move> = vec![];
+    
+    for x in 0..8 {
+        for y in 0..8 {
+            let board_square: Piece = board[x][y];
+            if board_square.color == side && !board_square.is_empty { 
+                output.extend(find_all_legal_moves_for_a_piece(&board, &(x as u8, y as u8)));
+            }
+        }
+    } 
+
+    output
+}
 
 
+// Game States
+// pub fn is_checkmate(board: &[[Piece; 8]; 8], side: bool) -> bool {}
+// pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {}
 
 
+// Pawn promotion
+// pub fn pawn_to_new_piece(board: &mut [[Piece; 8]; 8], piece_square: &(u8, u8)) {}
 
 
 // Communication

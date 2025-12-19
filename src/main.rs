@@ -357,6 +357,8 @@ mod tests {
 
         pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
         pieces_logic::place_pawn_on_board(&mut board, &(6, 4), true);
+        pieces_logic::place_pawn_on_board(&mut board, &(5, 2), true);
+        board[5][2].has_moved = true;
 
         let mut legal_moves: Vec<pieces_logic::Move> = vec![];
 
@@ -367,6 +369,13 @@ mod tests {
         
         legal_moves.sort(); 
         gen_legal_moves.sort();
+
+        assert_eq!(legal_moves, gen_legal_moves);
+        
+        legal_moves = vec![];
+        legal_moves.push(pieces_logic::Move {current_square: (5, 2), destination_square: (4, 2)});
+        
+        gen_legal_moves = pieces_logic::get_legal_moves_for_pawn(&board, &(5, 2));
 
         assert_eq!(legal_moves, gen_legal_moves);
 
@@ -678,6 +687,51 @@ mod tests {
 
         assert_eq!(king_moves, expected_king_moves);
          
+    }
+
+
+    #[test]
+    fn get_all_legal_moves_for_this_turn() {
+        let mut board = chess_board::create_empty_board();
+        let mut expected_board_moves: Vec<pieces_logic::Move> = vec![];
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_pawn_on_board(&mut board, &(5, 4), true);
+        board[5][4].has_moved = true;
+        pieces_logic::place_pawn_on_board(&mut board, &(6, 3), true);   
+        pieces_logic::place_pawn_on_board(&mut board, &(6, 5), true);   
+        pieces_logic::place_pawn_on_board(&mut board, &(7, 3), true);   
+        pieces_logic::place_pawn_on_board(&mut board, &(7, 5), true);
+
+        
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 5), destination_square: (5, 5) });
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 5), destination_square: (4, 5) });
+        expected_board_moves.push(pieces_logic::Move { current_square: (5, 4), destination_square: (4, 4) });
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 3), destination_square: (5, 3) });
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 3), destination_square: (4, 3) });
+        expected_board_moves.push(pieces_logic::Move { current_square: (7, 4), destination_square: (6, 4) });
+        
+        let mut board_moves: Vec<pieces_logic::Move> = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
+
+        board_moves.sort();
+        expected_board_moves.sort();
+        
+        for x in &board_moves {
+            println!("{:?}", x);
+        }
+        println!("\n");
+        for x in &expected_board_moves {
+            println!("{:?}", x);
+        }
+
+        assert_eq!(expected_board_moves, board_moves);
+        
+
+
+
+
+
+
     }
 
 
