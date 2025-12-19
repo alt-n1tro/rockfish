@@ -1,4 +1,5 @@
 use core::borrow;
+use std::intrinsics::unreachable;
 use std::process::Output;
 use std::usize;
 
@@ -518,8 +519,23 @@ pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
 
 
 // For bot moves
-//pub fn find_all_legal_moves_for_a_piece(piece: &Piece) -> Vec<Move> {}
+pub fn find_all_legal_moves_for_a_piece(board: &[[Piece; 8]; 8], square: &(u8, u8)) -> Vec<Move> {
+    
+    let empty_vec: Vec<Move> = vec![];
 
+    match board[square.0 as usize][square.1 as usize].symbol {
+        'p' | 'P' => get_legal_moves_for_pawn(&board, &square),
+        'b' | 'B' => get_legal_moves_for_bishop(&board, &square),
+        'n' | 'N' => get_legal_moves_for_knight(&board, &square),
+        'r' | 'R' => get_legal_moves_for_rook(&board, &square),
+        'q' | 'Q' => get_legal_moves_for_queen(&board, &square),
+        'k' | 'K' => get_legal_moves_for_king(&board, &square),
+        _ => empty_vec,
+    }
+
+}
+
+//pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: bool) -> Vec<Move> {}
 
 
 
