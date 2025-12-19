@@ -715,25 +715,27 @@ mod tests {
 
         board_moves.sort();
         expected_board_moves.sort();
-        
-        for x in &board_moves {
-            println!("{:?}", x);
-        }
-        println!("\n");
-        for x in &expected_board_moves {
-            println!("{:?}", x);
-        }
 
         assert_eq!(expected_board_moves, board_moves);
+    }
+    
+
+    #[test]
+    fn is_checkmate() {
+        let mut board = chess_board::create_empty_board();
         
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_rook_on_board(&mut board, &(6, 0), false);
+        pieces_logic::place_rook_on_board(&mut board, &(7, 7), false);
 
+        assert_eq!(true, pieces_logic::is_checkmate(&board, true));
 
+        pieces_logic::place_rook_on_board(&mut board, &(0, 5), true);
 
-
+        assert_eq!(false, pieces_logic::is_checkmate(&board, true));
 
 
     }
-
 
 }
 

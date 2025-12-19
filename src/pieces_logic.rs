@@ -545,7 +545,13 @@ pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: bool) -> V
 
 
 // Game States
-// pub fn is_checkmate(board: &[[Piece; 8]; 8], side: bool) -> bool {}
+pub fn is_checkmate(board: &[[Piece; 8]; 8], side: bool) -> bool {
+
+    let output: Vec<Move> = vec![];
+
+    is_king_in_check(&board, side) && get_all_legal_moves_for_this_turn(&board, side) == output
+}
+
 // pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {}
 
 
