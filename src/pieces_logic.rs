@@ -569,7 +569,7 @@ pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
 // Communication
 //pub fn move_to_universal_chess_interface(move_: &Move) -> String {}
 
-pub fn universal_chess_interface_to_move(uci: &'static str) -> Result<Move, &'static str> {
+pub fn universal_chess_interface_to_move(uci: String) -> Result<Move, &'static str> {
     
     let chars: Vec<char> = uci.chars().collect();
     let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0)};
@@ -580,16 +580,16 @@ pub fn universal_chess_interface_to_move(uci: &'static str) -> Result<Move, &'st
         return Err("Incorrect FROM Column! -> a-h");
     }
 
-    if matches!(chars[2], 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h') {
-        temp_move.destination_square.1 = chars[2] as u8 - 97;
-    } else {
-        return Err("Incorrect TO Column! -> a-h");
-    }
-
     if matches!(chars[1], '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8') {
         temp_move.current_square.0 = 7 - (chars[1] as u8 - 49);
     } else {
         return Err("Incorrect FROM Row! -> 1-8");
+    }
+
+    if matches!(chars[2], 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h') {
+        temp_move.destination_square.1 = chars[2] as u8 - 97;
+    } else {
+        return Err("Incorrect TO Column! -> a-h");
     }
 
     if matches!(chars[3], '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8') {

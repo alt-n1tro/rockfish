@@ -1,31 +1,70 @@
-
 mod chess_board;
 mod pieces_logic;
 
-
-
-
+use rand::seq::IndexedRandom;
 
 fn main() {
     
     let mut board = chess_board::initialize_chess_board();
-
-
-    chess_board::print_chess_board(&board);
     
-    let m: pieces_logic::Move = pieces_logic::universal_chess_interface_to_move(&"a2a4").unwrap();
-    let m2: pieces_logic::Move = pieces_logic::universal_chess_interface_to_move(&"e7e5").unwrap();
+    let mut buffer_str = String::new();
+ 
+    'outer_loop: loop {
+
+        chess_board::print_chess_board(&board);
+
+        let all_legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
+        
+        if all_legal_moves_white.len() == 0 {
+            if pieces_logic::is_checkmate(&board, true) {
+                println!("\n************\n\nBlack Won!\n\n************")
+            } else {
+                println!("\n************\n\nStalemate!\n\n************")
+            }
+           break 'outer_loop; 
+        }
+        
+        'inner_loop: loop {
+            println!("UCI Moves (i.e. a2a4)\nMake Move: ");
+                
+            buffer_str.clear();
+            let _ = std::io::stdin().read_line(&mut buffer_str);
+        
+            let user_input = pieces_logic::universal_chess_interface_to_move(buffer_str.clone());
+
+            if user_input.is_ok() {
+                if all_legal_moves_white.contains(user_input.as_ref().unwrap()) {
+                    pieces_logic::make_move(&mut board, &user_input.as_ref().unwrap()); 
+                    break 'inner_loop;
+                }
+                println!("Not a legal move...");
+            } else {
+                println!("{:?}", user_input.err());
+            }
+        }
+
+        let all_legal_moves_black = pieces_logic::get_all_legal_moves_for_this_turn(&board, false);
+
+        if all_legal_moves_black.len() == 0 {
+            if pieces_logic::is_checkmate(&board, false) {
+                println!("\n************\n\nWhite Won!\n\n************")
+            } else {
+                println!("\n************\n\nStalemate!\n\n************")
+            }
+           break 'outer_loop; 
+        }
+        
+        let black_move = all_legal_moves_black.choose(&mut rand::rng()).unwrap();
+        
+        pieces_logic::make_move(&mut board, black_move);
 
 
-    let legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
 
-    if legal_moves_white.contains(&m) {
-        pieces_logic::make_move(&mut board, &m);
+
     }
 
-    pieces_logic::make_move(&mut board, &m2);
 
-    chess_board::print_chess_board(&board);
+
 }
 
 
