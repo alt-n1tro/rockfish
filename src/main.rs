@@ -1,3 +1,4 @@
+
 mod chess_board;
 mod pieces_logic;
 
@@ -12,42 +13,19 @@ fn main() {
 
     chess_board::print_chess_board(&board);
     
-
-    let move_: pieces_logic::Move = pieces_logic::Move {
-        current_square: (7, 4),
-        destination_square: (4, 4),
-    };
-    
-    //pieces_logic::make_move(&mut board, &move_);
+    let m: pieces_logic::Move = pieces_logic::universal_chess_interface_to_move(&"a2a4").unwrap();
+    let m2: pieces_logic::Move = pieces_logic::universal_chess_interface_to_move(&"e7e5").unwrap();
 
 
-    board[6][5] = pieces_logic::create_empty_piece(&(6, 5));
-    board[6][6] = pieces_logic::create_empty_piece(&(6, 6));
-    board[5][6] = pieces_logic::Piece { color: true,
-                                            symbol: 'P',
-                                            has_moved: false,
-                                            value: 1,
-                                            is_empty: false,
-                                            current_square: (5, 6) };
-    board[4][7] = pieces_logic::Piece { 
-            color: false, 
-            symbol: 'q', 
-            has_moved: true, 
-            value: 9, 
-            is_empty: false, 
-            current_square: (4, 7) };    
-    
-    
+    let legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
+
+    if legal_moves_white.contains(&m) {
+        pieces_logic::make_move(&mut board, &m);
+    }
+
+    pieces_logic::make_move(&mut board, &m2);
+
     chess_board::print_chess_board(&board);
-    
-    let x = pieces_logic::get_square_of_king(&board, true);
-    
-    println!("{}, {}", x.0, x.1);
-
-
-    let _ = pieces_logic::is_king_in_check(&board, true);
-
-
 }
 
 

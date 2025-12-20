@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
@@ -144,7 +146,7 @@ pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
                 }
             }
         }
-        unreachable!("No White King was found...\nAt least 2 Kings MUST exist at all times!");
+        unreachable!("\nNo White King was found...\nAt least 2 Kings MUST exist at all times!");
     } else {
         if board[0][4].symbol == 'k' {
             return (0 as u8, 4 as u8);
@@ -157,7 +159,7 @@ pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
                 }
             }
         }
-        unreachable!("No Black King was found...\nAt least 2 Kings MUST exist at all times!");
+        unreachable!("\nNo Black King was found...\nAt least 2 Kings MUST exist at all times!");
     }
 }
 
@@ -414,18 +416,18 @@ pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), move
             
             let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
 
-            if !is_piece_pinned(&board, &proposed_move) {
-
-                if destination_square.is_empty {  
-                    output.push(proposed_move);
-                 
-                } else {
-                    if destination_square.color != piece_color {
-                        output.push(proposed_move);
-                    }
-                    break 'inner_while;
-                }
+            if !destination_square.is_empty && destination_square.color == piece_color {  
+                break 'inner_while; 
             }
+                
+            if !is_piece_pinned(&board, &proposed_move) {
+                output.push(proposed_move);
+            }
+
+            if !destination_square.is_empty {
+                break 'inner_while;
+            }                
+            
             row += x.0;
             col += x.1;
         }
@@ -561,12 +563,46 @@ pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
 
 
 // Pawn promotion
-// pub fn pawn_to_new_piece(board: &mut [[Piece; 8]; 8], piece_square: &(u8, u8)) {}
+//pub fn pawn_to_new_piece(board: &mut [[Piece; 8]; 8], piece_square: &(u8, u8)) {}
 
 
 // Communication
 //pub fn move_to_universal_chess_interface(move_: &Move) -> String {}
-//pub fn universal_chess_interface_to_move(uci: &String) -> Move {}
+
+pub fn universal_chess_interface_to_move(uci: &'static str) -> Result<Move, &'static str> {
+    
+    let chars: Vec<char> = uci.chars().collect();
+    let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0)};
+    
+    if matches!(chars[0], 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h') {
+        temp_move.current_square.1 = chars[0] as u8 - 97;
+    } else {
+        return Err("Incorrect FROM Column! -> a-h");
+    }
+
+    if matches!(chars[2], 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h') {
+        temp_move.destination_square.1 = chars[2] as u8 - 97;
+    } else {
+        return Err("Incorrect TO Column! -> a-h");
+    }
+
+    if matches!(chars[1], '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8') {
+        temp_move.current_square.0 = 7 - (chars[1] as u8 - 49);
+    } else {
+        return Err("Incorrect FROM Row! -> 1-8");
+    }
+
+    if matches!(chars[3], '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8') {
+        temp_move.destination_square.0 = 7 - (chars[3] as u8 - 49);
+    } else {
+        return Err("Incorrect TO Row! -> 1-8");
+    }
+
+
+
+    Ok(temp_move)
+}
+
 //pub fn get_universal_chess_interface_from_user_input() -> String {}
 
 
