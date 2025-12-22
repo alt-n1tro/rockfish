@@ -1,3 +1,5 @@
+use std::usize;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
@@ -494,30 +496,46 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
 }
 
 
-// pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
-//     
-//     let king = get_square_of_king(&board, color);
-//     let king_piece = board[king.0 as usize][king.1 as usize];
-// 
-//     let mut output: Vec<Move> = vec![];
-// 
-//     let mut row: usize = if color {7} else {0};
-//     let left_corner: Piece = board[row][0];
-//     let right_corner: Piece = board[row][7];
-// 
-//     if king_piece.has_moved {
-//         return output;
-//     }
-// 
-//     if !left_corner.is_empty && matches!(left_corner.symbol, 'r' | 'R') && !left_corner.has_moved {
-//         
-//         if board[king.0 as usize][king.1 - 1].is_empty {
-//             output.push(); 
-//         }
-// 
-//     } 
-//     output
-// }
+pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
+    
+    let king = get_square_of_king(&board, color);
+    let king_piece = board[king.0 as usize][king.1 as usize];
+
+    let mut output: Vec<Move> = vec![];
+
+    let row: usize = if color {7} else {0};
+    let left_corner: Piece = board[row][0];
+    let right_corner: Piece = board[row][7];
+
+    if king_piece.has_moved {
+        return output;
+    }
+
+    if !left_corner.is_empty && matches!(left_corner.symbol, 'r' | 'R') && !left_corner.has_moved {
+        
+        if  board[king.0 as usize][(king.1 - 1) as usize].is_empty &&
+            board[king.0 as usize][(king.1 - 2) as usize].is_empty {
+            // Check for pins 
+            if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 1), castle: false }) &&
+                !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: false }) {
+                output.push(Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: true });
+            }
+        }
+    }
+    
+    if !right_corner.is_empty && matches!(right_corner.symbol, 'r' | 'R') && !right_corner.has_moved {
+        
+        if  board[king.0 as usize][(king.1 + 1) as usize].is_empty &&
+            board[king.0 as usize][(king.1 + 2) as usize].is_empty {
+            // Check for pins 
+            if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 1), castle: false }) &&
+                !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: false }) {
+                output.push(Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: true });
+            }
+        }
+    }
+    output
+}
 
 
 

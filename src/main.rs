@@ -707,7 +707,34 @@ mod tests {
 
     #[test]
     fn get_castle_move() {
-        assert!(false);
+        let mut board = chess_board::initialize_chess_board();
+
+        board[7][6] = pieces_logic::create_empty_piece(&(7, 6));
+        board[7][3] = pieces_logic::create_empty_piece(&(7, 3));
+        board[7][2] = pieces_logic::create_empty_piece(&(7, 2));
+
+        let mut castle_moves_white: Vec<pieces_logic::Move> = pieces_logic::get_castling_moves(&board, true);
+        castle_moves_white.sort();
+        let castle_moves_black: Vec<pieces_logic::Move> = pieces_logic::get_castling_moves(&board, false);
+        
+        // Testing against full side 
+        let mut exp_castle_moves: Vec<pieces_logic::Move> = vec![];
+        assert_eq!(exp_castle_moves, castle_moves_black); 
+        
+        // Testing where right side is blocked by piece
+        exp_castle_moves.push(pieces_logic::Move { current_square: (7, 4), destination_square: (7, 2), castle: true });
+        assert_eq!(exp_castle_moves, castle_moves_white);
+
+        // Removing piece that's blocking right-side castling
+        board[7][5] = pieces_logic::create_empty_piece(&(7, 5));
+        castle_moves_white = pieces_logic::get_castling_moves(&board, true);
+
+        exp_castle_moves.push(pieces_logic::Move { current_square: (7, 4), destination_square: (7, 6), castle: true });
+        exp_castle_moves.sort();
+
+        assert_eq!(castle_moves_white, exp_castle_moves);
+
+
     }
 
 
