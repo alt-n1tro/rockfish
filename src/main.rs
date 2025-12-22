@@ -114,8 +114,7 @@ mod tests {
         
         let mut board = chess_board::initialize_chess_board();
 
-        let move_: pieces_logic::Move = pieces_logic::Move { current_square: (6, 0), destination_square: (4, 0)
-        };
+        let move_: pieces_logic::Move = pieces_logic::Move { current_square: (6, 0), destination_square: (4, 0), castle: false};
         pieces_logic::make_move(&mut board, &move_);
         
         let mut board_2 = chess_board::initialize_chess_board();
@@ -144,8 +143,8 @@ mod tests {
         assert_eq!(init_white_king, pieces_logic::get_square_of_king(&board, true));
         assert_eq!(init_black_king, pieces_logic::get_square_of_king(&board, false));
         
-        pieces_logic::make_move(&mut board, &pieces_logic::Move {current_square: init_white_king, destination_square: white_king_pos_});
-        pieces_logic::make_move(&mut board, &pieces_logic::Move {current_square: init_black_king, destination_square: black_king_pos_});
+        pieces_logic::make_move(&mut board, &pieces_logic::Move {current_square: init_white_king, destination_square: white_king_pos_, castle: false});
+        pieces_logic::make_move(&mut board, &pieces_logic::Move {current_square: init_black_king, destination_square: black_king_pos_, castle: false});
         
         assert_eq!(white_king_pos_, pieces_logic::get_square_of_king(&board, true));
         assert_eq!(black_king_pos_, pieces_logic::get_square_of_king(&board, false));
@@ -360,7 +359,7 @@ mod tests {
         pieces_logic::place_pawn_on_board(&mut board, &(6, 5), true);
         pieces_logic::place_bishop_on_board(&mut board, &(4, 7), false);
         
-        let pawn_move: pieces_logic::Move = pieces_logic::Move { current_square: (6, 5), destination_square: (5, 5) };
+        let pawn_move: pieces_logic::Move = pieces_logic::Move { current_square: (6, 5), destination_square: (5, 5), castle: false};
 
         assert_eq!(true, pieces_logic::is_piece_pinned(&board, &pawn_move));
         
@@ -379,8 +378,8 @@ mod tests {
 
         let mut legal_moves: Vec<pieces_logic::Move> = vec![];
 
-        legal_moves.push(pieces_logic::Move {current_square: (6, 4), destination_square: (5, 4)}); 
-        legal_moves.push(pieces_logic::Move {current_square: (6, 4), destination_square: (4, 4)});
+        legal_moves.push(pieces_logic::Move {current_square: (6, 4), destination_square: (5, 4), castle: false}); 
+        legal_moves.push(pieces_logic::Move {current_square: (6, 4), destination_square: (4, 4), castle: false});
 
         let mut gen_legal_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_pawn(&board, &(6, 4));
         
@@ -390,7 +389,7 @@ mod tests {
         assert_eq!(legal_moves, gen_legal_moves);
         
         legal_moves = vec![];
-        legal_moves.push(pieces_logic::Move {current_square: (5, 2), destination_square: (4, 2)});
+        legal_moves.push(pieces_logic::Move {current_square: (5, 2), destination_square: (4, 2), castle: false});
         
         gen_legal_moves = pieces_logic::get_legal_moves_for_pawn(&board, &(5, 2));
 
@@ -413,12 +412,12 @@ mod tests {
         
         let mut exp_knight_moves: Vec<pieces_logic::Move> = vec![];
 
-        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (3, 6) });
-        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (3, 4) });
-        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (4, 3) });
-        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (6, 3) });
-        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (7, 6) });
-        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (6, 7) });
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (3, 6), castle: false});
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (3, 4), castle: false});
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (4, 3), castle: false});
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (6, 3), castle: false});
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (7, 6), castle: false});
+        exp_knight_moves.push(pieces_logic::Move { current_square: (5, 5), destination_square: (6, 7), castle: false});
         
         let mut gen_knight_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_knight(&board, &(5, 5));
 
@@ -454,7 +453,7 @@ mod tests {
         let mut exp_bishop_moves: Vec<pieces_logic::Move> = vec![];
 
         for x in 1..8 {
-            exp_bishop_moves.push(pieces_logic::Move {current_square: (0, 0), destination_square: (x as u8, x as u8)});
+            exp_bishop_moves.push(pieces_logic::Move {current_square: (0, 0), destination_square: (x as u8, x as u8), castle: false});
         }
 
         bishop_moves.sort();
@@ -465,7 +464,7 @@ mod tests {
         pieces_logic::place_rook_on_board(&mut board, &(7, 7), false);
         bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(0, 0));
 
-        assert_eq!(bishop_moves, [pieces_logic::Move {current_square: (0, 0), destination_square: (7, 7)}]);
+        assert_eq!(bishop_moves, [pieces_logic::Move {current_square: (0, 0), destination_square: (7, 7), castle: false}]);
         
         exp_bishop_moves.pop();
 
@@ -487,23 +486,23 @@ mod tests {
 
         
         // top left
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 3)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 3), castle: false});
         pieces_logic::place_rook_on_board(&mut board, &(3, 3), false);
 
         // top right
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 5)});
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (2, 6)});
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (1, 7)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 5), castle: false});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (2, 6), castle: false});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (1, 7), castle: false});
         
         // bottom right 
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 5)});
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (6, 6)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 5), castle: false});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (6, 6), castle: false});
         pieces_logic::place_rook_on_board(&mut board, &(7, 7), true);
 
         // bottom left 
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 3)});
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (6, 2)});
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (7, 1)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 3), castle: false});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (6, 2), castle: false});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (7, 1), castle: false});
         pieces_logic::place_knight_on_board(&mut board, &(7, 1), false);
 
         bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(4, 4));
@@ -522,7 +521,7 @@ mod tests {
         bishop_moves = pieces_logic::get_legal_moves_for_bishop(&board, &(1, 7));
 
         exp_bishop_moves = vec![];
-        exp_bishop_moves.push(pieces_logic::Move {current_square: (1, 7), destination_square: (5, 3)});
+        exp_bishop_moves.push(pieces_logic::Move {current_square: (1, 7), destination_square: (5, 3), castle: false});
         
         chess_board::print_chess_board(&board);
 
@@ -548,24 +547,24 @@ mod tests {
         
         pieces_logic::make_square_empty(&mut board, &(7, 0));
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5), castle: false});
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 5)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 5), castle: false});
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7), castle: false});
         
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 2)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 1)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 0)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 2), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 1), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 0), castle: false});
 
         rook_moves = pieces_logic::get_legal_moves_for_rook(&board, &(4, 5));
         
@@ -577,22 +576,22 @@ mod tests {
         expected_rook_moves = vec![];
 
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5), castle: false});
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5), castle: false});
         pieces_logic::place_knight_on_board(&mut board, &(1, 5), false);
 
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7), castle: false});
         
 
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4)});
-        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3)});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4), castle: false});
+        expected_rook_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3), castle: false});
         pieces_logic::place_pawn_on_board(&mut board, &(4, 2), true);
 
         rook_moves = pieces_logic::get_legal_moves_for_rook(&board, &(4, 5));
@@ -615,41 +614,41 @@ mod tests {
         pieces_logic::place_queen_on_board(&mut board, &(4, 5), true);
         
         // Rook rays
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 5), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 5), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 5), castle: false});
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 5)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 5), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 5), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 5), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 5), castle: false});
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 6), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 7), castle: false});
         
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 2)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 1)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 0)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 4), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 3), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 2), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 1), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (4, 0), castle: false});
 
         // Bishop rays
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 6)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 7)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 6), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 7), castle: false});
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 4)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 3)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 2)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 1)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 4), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 3), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (1, 2), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (0, 1), castle: false});
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 6)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 7)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (3, 6), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (2, 7), castle: false});
 
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 4)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 3)});
-        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 2)});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (5, 4), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (6, 3), castle: false});
+        expected_queen_moves.push(pieces_logic::Move {current_square: (4, 5), destination_square: (7, 2), castle: false});
 
 
         let mut queen_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_queen(&board, &(4, 5));
@@ -674,12 +673,12 @@ mod tests {
         
         let mut expected_king_moves: Vec<pieces_logic::Move> = vec![];
 
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 5)});
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 4)});
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 3)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 5), castle: false});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 4), castle: false});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (5, 3), castle: false});
 
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (4, 5)});
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (4, 3)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (4, 5), castle: false});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (4, 3), castle: false});
         
         pieces_logic::place_rook_on_board(&mut board, &(3, 0), false);
         
@@ -693,9 +692,9 @@ mod tests {
         board[3][0] = pieces_logic::create_empty_piece(&(3, 0));
 
 
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 5)});
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 4)});
-        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 3)});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 5), castle: false});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 4), castle: false});
+        expected_king_moves.push(pieces_logic::Move {current_square: (4, 4), destination_square: (3, 3), castle: false});
 
         king_moves = pieces_logic::get_legal_moves_for_king(&board, &(4, 4));
 
@@ -726,12 +725,12 @@ mod tests {
         pieces_logic::place_pawn_on_board(&mut board, &(7, 5), true);
 
         
-        expected_board_moves.push(pieces_logic::Move { current_square: (6, 5), destination_square: (5, 5) });
-        expected_board_moves.push(pieces_logic::Move { current_square: (6, 5), destination_square: (4, 5) });
-        expected_board_moves.push(pieces_logic::Move { current_square: (5, 4), destination_square: (4, 4) });
-        expected_board_moves.push(pieces_logic::Move { current_square: (6, 3), destination_square: (5, 3) });
-        expected_board_moves.push(pieces_logic::Move { current_square: (6, 3), destination_square: (4, 3) });
-        expected_board_moves.push(pieces_logic::Move { current_square: (7, 4), destination_square: (6, 4) });
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 5), destination_square: (5, 5), castle: false});
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 5), destination_square: (4, 5), castle: false});
+        expected_board_moves.push(pieces_logic::Move { current_square: (5, 4), destination_square: (4, 4), castle: false});
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 3), destination_square: (5, 3), castle: false});
+        expected_board_moves.push(pieces_logic::Move { current_square: (6, 3), destination_square: (4, 3), castle: false});
+        expected_board_moves.push(pieces_logic::Move { current_square: (7, 4), destination_square: (6, 4), castle: false});
         
         let mut board_moves: Vec<pieces_logic::Move> = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
 
