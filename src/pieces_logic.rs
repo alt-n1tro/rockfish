@@ -1,4 +1,4 @@
-use std::fmt::format;
+use std::process::Output;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
@@ -16,6 +16,7 @@ pub struct Piece {
 pub struct Move {
     pub current_square: (u8, u8),
     pub destination_square: (u8, u8),
+    pub castle: bool,
 }
 
 
@@ -333,7 +334,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         
         if board[new_row as usize][square.1 as usize].is_empty {
             
-            let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1)};
+            let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1), castle: false};
             
             if !is_piece_pinned(&board, &up_move) {
             
@@ -343,7 +344,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
                 
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty && !piece_to_move.has_moved {
                     
-                        let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1) };
+                        let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1), castle: false};
                         
                         output.push(up_up_move); 
                     }
@@ -357,7 +358,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         if square.1 < 7 {
             let board_square = board[new_row as usize][(square.1 + 1) as usize];
             if board_square.color != piece_to_move.color && !board_square.is_empty {
-                let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1)};
+                let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1), castle: false};
                 if !is_piece_pinned(&board, &left_move) {
                     output.push(left_move);
                 }
@@ -366,7 +367,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         if square.1 >= 1 {
             let board_square = board[new_row as usize][(square.1 - 1) as usize];
             if board_square.color != piece_to_move.color && !board_square.is_empty {
-                let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1)};
+                let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1), castle: false};
                 if !is_piece_pinned(&board, &right_move) {
                     output.push(right_move);
                 }
@@ -392,7 +393,7 @@ pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> V
         if row >= 0 && row < 8 && col >= 0 && col < 8 {
             let to_sqr = board[row as usize][col as usize];
             if to_sqr.is_empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) {
-                let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8)};
+                let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false};
                 if !is_piece_pinned(&board, &knight_move) {
                     output.push(knight_move);
                 }
@@ -414,7 +415,7 @@ pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), move
             let destination_square = board[row as usize][col as usize];
             let piece_color = board[square.0 as usize][square.1 as usize].color;
             
-            let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
+            let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false};
 
             if !destination_square.is_empty && destination_square.color == piece_color {  
                 break 'inner_while; 
@@ -478,7 +479,7 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
             let board_square = board[row as usize][col as usize];
             let piece_square = board[square.0 as usize][square.1 as usize];
 
-            let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8) };
+            let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false};
             
             if board_square.is_empty {
                 if !is_piece_pinned(&board, &k_move) {
@@ -491,10 +492,40 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
             }
         }
     }
+    output
+}
+
+
+pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
+    
+    let king = get_square_of_king(&board, color);
+    let king_piece = board[king.0 as usize][king.1 as usize];
+
+    let mut output: Vec<Move> = vec![];
+
+    let mut row: usize = if color {7} else {0};
+    let left_corner: Piece = board[row][0];
+    let right_corner: Piece = board[row][7];
+
+    if king_piece.has_moved {
+        return output;
+    }
+
+    if !left_corner.is_empty && matches!(left_corner.symbol, 'r' | 'R') && !left_corner.has_moved {
+        
+        if board[king.0 as usize][king.1 - 1].is_empty {
+            output.push(); 
+        }
+
+    }
+
+
+
+
     
     output
-
 }
+
 
 
 
@@ -572,7 +603,7 @@ pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
 pub fn universal_chess_interface_to_move(uci: String) -> Result<Move, &'static str> {
     
     let chars: Vec<char> = uci.chars().collect();
-    let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0)};
+    let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0), castle: false};
     
     if matches!(chars[0], 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h') {
         temp_move.current_square.1 = chars[0] as u8 - 97;

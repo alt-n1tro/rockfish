@@ -706,6 +706,11 @@ mod tests {
          
     }
 
+    #[test]
+    fn get_castle_move() {
+        assert!(false);
+    }
+
 
     #[test]
     fn get_all_legal_moves_for_this_turn() {
@@ -772,8 +777,6 @@ mod tests {
         pieces_logic::place_knight_on_board(&mut board, &(2, 0), false);
 
         assert_eq!(true, pieces_logic::is_stalemate(&board, true));
-
-
 
     }
 
