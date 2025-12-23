@@ -1,5 +1,9 @@
 use std::usize;
 
+use rand::seq::IndexedRandom;
+
+use crate::chess_board::create_empty_board;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
@@ -330,29 +334,18 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
     
     let new_row = square.0 as i8 + adder;
 
-    if new_row >= 0 && new_row < 8 {
-        
+    if new_row >= 0 && new_row < 8 { 
         if board[new_row as usize][square.1 as usize].is_empty {
-            
             let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1), castle: false};
-            
             if !is_piece_pinned(&board, &up_move) {
-            
                 output.push(up_move);
-                
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
-                
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty && !piece_to_move.has_moved {
-                    
                         let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1), castle: false};
-                        
                         output.push(up_up_move); 
                     }
                 }
             }
-            
-            
-            
         }
         
         if square.1 < 7 {
@@ -492,6 +485,14 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
             }
         }
     }
+
+    let castling_moves: Vec<Move> = get_castling_moves(&board, board[square.0 as usize][square.1 as usize].color);
+    
+    if castling_moves.len() > 0 {
+        println!("Castling Allowed!");
+    }
+    output.extend(castling_moves);
+
     output
 }
 
@@ -540,16 +541,28 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
 
 
 
+// We ensure that every move is legal in other functions.
 pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
     
     let cur_sq = move_.current_square;
     let des_sq = move_.destination_square;
-
-    board[des_sq.0 as usize][des_sq.1 as usize] = board[cur_sq.0 as usize][cur_sq.1 as usize];
-    board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
     
+    board[des_sq.0 as usize][des_sq.1 as usize] = board[cur_sq.0 as usize][cur_sq.1 as usize];    
     board[des_sq.0 as usize][des_sq.1 as usize].current_square = des_sq;
     board[des_sq.0 as usize][des_sq.1 as usize].has_moved = true;
+    
+    board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
+
+    if move_.castle {
+        let shift: i8 = if des_sq.1 > cur_sq.1 {1} else {-1};
+        let rook_side: usize = if des_sq.1 > cur_sq.1 {7} else {0};
+        
+        board[cur_sq.0 as usize][cur_sq.1 as usize + shift as usize] = board[cur_sq.0 as usize][rook_side];
+        board[cur_sq.0 as usize][cur_sq.1 as usize + shift as usize].current_square = (cur_sq.0, cur_sq.1 + shift as u8);
+        board[cur_sq.0 as usize][cur_sq.1 as usize + shift as usize].has_moved = true;
+
+        board[cur_sq.0 as usize][rook_side] = create_empty_piece(&(cur_sq.0, rook_side as u8));    
+    }
 }
 
 
@@ -605,13 +618,13 @@ pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
 
 
 // Pawn promotion
-//pub fn pawn_to_new_piece(board: &mut [[Piece; 8]; 8], piece_square: &(u8, u8)) {}
+//pub fn pawn_to_new_piece(board: &mut [[Piece; 8]; 8], piece_square: &(u8, u8), symbol: char) {}
 
 
 // Communication
 //pub fn move_to_universal_chess_interface(move_: &Move) -> String {}
 
-pub fn universal_chess_interface_to_move(uci: String) -> Result<Move, &'static str> {
+pub fn universal_chess_interface_to_move(board: &[[Piece;8];8], uci: String) -> Result<Move, &'static str> {
     
     let chars: Vec<char> = uci.chars().collect();
     let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0), castle: false};
@@ -638,6 +651,12 @@ pub fn universal_chess_interface_to_move(uci: String) -> Result<Move, &'static s
         temp_move.destination_square.0 = 7 - (chars[3] as u8 - 49);
     } else {
         return Err("Incorrect TO Row! -> 1-8");
+    }
+
+    if matches!(board[temp_move.current_square.0 as usize][temp_move.current_square.1 as usize].symbol, 'k' | 'K') {
+        if (temp_move.current_square.1 as i8 - temp_move.destination_square.1 as i8).abs() == 2 {
+            temp_move.castle = true;
+        }
     }
 
 

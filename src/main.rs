@@ -30,7 +30,7 @@ fn main() {
             buffer_str.clear();
             let _ = std::io::stdin().read_line(&mut buffer_str);
         
-            let user_input = pieces_logic::universal_chess_interface_to_move(buffer_str.clone());
+            let user_input = pieces_logic::universal_chess_interface_to_move(&board, buffer_str.clone());
 
             if user_input.is_ok() {
                 if all_legal_moves_white.contains(user_input.as_ref().unwrap()) {
@@ -733,7 +733,6 @@ mod tests {
         exp_castle_moves.sort();
 
         assert_eq!(castle_moves_white, exp_castle_moves);
-
 
     }
 
