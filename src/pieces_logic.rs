@@ -1,9 +1,3 @@
-use std::usize;
-
-use rand::seq::IndexedRandom;
-
-use crate::chess_board::create_empty_board;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
@@ -16,7 +10,7 @@ pub struct Piece {
 
 
 // This should only ever be created via a function, that checks if the move is actually legal.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct Move {
     pub current_square: (u8, u8),
     pub destination_square: (u8, u8),
@@ -370,6 +364,23 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
             }
         }
     }
+
+    let out_length = output.len() as usize;
+
+    if out_length > 0 {
+        let mut temp_output: Vec<Move> = vec![];
+        for pawn_move in &output {
+            if pawn_move.destination_square.0 == 7 || pawn_move.destination_square.0 == 0 {
+                let mut temp_pawn_move = *pawn_move;
+                for x in ['q', 'r', 'b', 'n'] {
+                    temp_pawn_move.promotion = x;
+                    temp_output.push(temp_pawn_move);
+                }
+            }
+        }
+        output.extend(temp_output);
+    }
+
     output
 }
 
@@ -661,6 +672,21 @@ pub fn universal_chess_interface_to_move(board: &[[Piece;8];8], uci: String) -> 
             temp_move.castle = true;
         }
     }
+
+    if matches!(board[temp_move.current_square.0 as usize][temp_move.current_square.1 as usize].symbol, 'p' | 'P') {
+        if temp_move.destination_square.0 == 7 || temp_move.destination_square.0 == 0 {
+            if chars.len() > 4 {
+                if matches!(chars[4], 'q' | 'r' | 'b' | 'n') {
+                    temp_move.promotion = chars[4];
+                } else {
+                    return Err("Incorrect PROMOTION! -> q/r/b/n");
+                }
+            } else {
+                return Err("Ensure Proper Promotion Notation -> a1a2q");
+            }
+        }
+    }
+    
 
 
 
