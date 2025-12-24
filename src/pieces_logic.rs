@@ -21,6 +21,7 @@ pub struct Move {
     pub current_square: (u8, u8),
     pub destination_square: (u8, u8),
     pub castle: bool,
+    pub promotion: char,
 }
 
 
@@ -336,31 +337,33 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
 
     if new_row >= 0 && new_row < 8 { 
         if board[new_row as usize][square.1 as usize].is_empty {
-            let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1), castle: false};
+            let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1), castle: false, promotion: ' '};
             if !is_piece_pinned(&board, &up_move) {
                 output.push(up_move);
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
                     if board[(new_row + adder) as usize][square.1 as usize].is_empty && !piece_to_move.has_moved {
-                        let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1), castle: false};
+                        let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1), castle: false, promotion: ' '};
                         output.push(up_up_move); 
                     }
                 }
             }
         }
-        
+
+        // right capture
         if square.1 < 7 {
             let board_square = board[new_row as usize][(square.1 + 1) as usize];
             if board_square.color != piece_to_move.color && !board_square.is_empty {
-                let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1), castle: false};
+                let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1), castle: false, promotion: ' '};
                 if !is_piece_pinned(&board, &left_move) {
                     output.push(left_move);
                 }
             }
         }
+        // left capture
         if square.1 >= 1 {
             let board_square = board[new_row as usize][(square.1 - 1) as usize];
             if board_square.color != piece_to_move.color && !board_square.is_empty {
-                let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1), castle: false};
+                let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1), castle: false, promotion: ' '};
                 if !is_piece_pinned(&board, &right_move) {
                     output.push(right_move);
                 }
@@ -386,7 +389,7 @@ pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> V
         if row >= 0 && row < 8 && col >= 0 && col < 8 {
             let to_sqr = board[row as usize][col as usize];
             if to_sqr.is_empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) {
-                let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false};
+                let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: ' '};
                 if !is_piece_pinned(&board, &knight_move) {
                     output.push(knight_move);
                 }
@@ -408,7 +411,7 @@ pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), move
             let destination_square = board[row as usize][col as usize];
             let piece_color = board[square.0 as usize][square.1 as usize].color;
             
-            let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false};
+            let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: ' '};
 
             if !destination_square.is_empty && destination_square.color == piece_color {  
                 break 'inner_while; 
@@ -472,7 +475,7 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
             let board_square = board[row as usize][col as usize];
             let piece_square = board[square.0 as usize][square.1 as usize];
 
-            let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false};
+            let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: ' '};
             
             if board_square.is_empty {
                 if !is_piece_pinned(&board, &k_move) {
@@ -517,9 +520,9 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
         if  board[king.0 as usize][(king.1 - 1) as usize].is_empty &&
             board[king.0 as usize][(king.1 - 2) as usize].is_empty {
             // Check for pins 
-            if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 1), castle: false }) &&
-                !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: false }) {
-                output.push(Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: true });
+            if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 1), castle: false, promotion: ' ' }) &&
+                !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: false, promotion: ' ' }) {
+                output.push(Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: true, promotion: ' ' });
             }
         }
     }
@@ -529,9 +532,9 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
         if  board[king.0 as usize][(king.1 + 1) as usize].is_empty &&
             board[king.0 as usize][(king.1 + 2) as usize].is_empty {
             // Check for pins 
-            if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 1), castle: false }) &&
-                !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: false }) {
-                output.push(Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: true });
+            if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 1), castle: false, promotion: ' ' }) &&
+                !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: false, promotion: ' ' }) {
+                output.push(Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: true, promotion: ' ' });
             }
         }
     }
@@ -627,7 +630,7 @@ pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
 pub fn universal_chess_interface_to_move(board: &[[Piece;8];8], uci: String) -> Result<Move, &'static str> {
     
     let chars: Vec<char> = uci.chars().collect();
-    let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0), castle: false};
+    let mut temp_move: Move = Move {current_square: (0, 0), destination_square: (0, 0), castle: false, promotion: ' '};
     
     if matches!(chars[0], 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h') {
         temp_move.current_square.1 = chars[0] as u8 - 97;
