@@ -42,6 +42,10 @@ fn main() {
                 println!("{:?}", user_input.err());
             }
         }
+        
+        if pieces_logic::is_insufficient_material(&board, false) {
+            println!("\n************\n\nInsufficient Material!\n\n************")
+        }
 
         let all_legal_moves_black = pieces_logic::get_all_legal_moves_for_this_turn(&board, false);
 
@@ -803,6 +807,22 @@ mod tests {
 
         assert_eq!(true, pieces_logic::is_stalemate(&board, true));
 
+    }
+
+
+    #[test]
+    fn pawn_promotion() {
+        assert!(false);
+    }
+
+    #[test]
+    fn en_passant() {
+        assert!(false);
+    }
+
+    #[test]
+    fn insufficient_material_stalemate() {
+        assert!(false);
     }
 
 }
