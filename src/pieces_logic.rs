@@ -378,20 +378,16 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         }
     }
 
-    let out_length = output.len() as usize;
-
-    if out_length > 0 {
+    if new_row == 0 || new_row == 7 {
         let mut temp_output: Vec<Move> = vec![];
         for pawn_move in &output {
-            if pawn_move.destination_square.0 == 7 || pawn_move.destination_square.0 == 0 {
-                let mut temp_pawn_move = *pawn_move;
-                for x in [Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight] {
-                    temp_pawn_move.promotion = x;
-                    temp_output.push(temp_pawn_move);
-                }
+            let mut temp_pawn_move = *pawn_move;
+            for x in [Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight] {
+                temp_pawn_move.promotion = x;
+                temp_output.push(temp_pawn_move);
             }
         }
-        output.extend(temp_output);
+        return temp_output;
     }
 
     output

@@ -812,7 +812,64 @@ mod tests {
 
     #[test]
     fn pawn_promotion() {
-        assert!(false);
+        let mut board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_pawn_on_board(&mut board, &(1, 4), true);
+        board[1][4].has_moved = true;
+
+        let mut pawn_moves: Vec<pieces_logic::Move> = pieces_logic::get_legal_moves_for_pawn(&board, &(1, 4));
+        
+        let mut exp_pawn_moves: Vec<pieces_logic::Move> = vec![];
+
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Queen});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Rook});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Bishop});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Knight});
+        
+        pawn_moves.sort();
+        exp_pawn_moves.sort();
+
+        assert_eq!(pawn_moves, exp_pawn_moves);
+        
+        exp_pawn_moves = vec![];
+        // No Moves
+        pieces_logic::place_bishop_on_board(&mut board, &(0, 4), false);
+        
+
+        pieces_logic::place_bishop_on_board(&mut board, &(0, 3), false);
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 3), castle: false, promotion: pieces_logic::Promotion::Queen});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 3), castle: false, promotion: pieces_logic::Promotion::Rook});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 3), castle: false, promotion: pieces_logic::Promotion::Bishop});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 3), castle: false, promotion: pieces_logic::Promotion::Knight});
+        
+        pieces_logic::place_bishop_on_board(&mut board, &(0, 5), false);
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 5), castle: false, promotion: pieces_logic::Promotion::Queen});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 5), castle: false, promotion: pieces_logic::Promotion::Rook});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 5), castle: false, promotion: pieces_logic::Promotion::Bishop});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 5), castle: false, promotion: pieces_logic::Promotion::Knight});
+
+        pawn_moves = pieces_logic::get_legal_moves_for_pawn(&board, &(1, 4));
+
+        pawn_moves.sort();
+        exp_pawn_moves.sort();
+        
+        assert_eq!(pawn_moves, exp_pawn_moves);
+        
+        board[0][4] = pieces_logic::create_empty_piece(&(0, 4));
+
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Queen});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Rook});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Bishop});
+        exp_pawn_moves.push(pieces_logic::Move { current_square: (1, 4), destination_square: (0, 4), castle: false, promotion: pieces_logic::Promotion::Knight});
+
+        
+        pawn_moves = pieces_logic::get_legal_moves_for_pawn(&board, &(1, 4));
+
+        pawn_moves.sort();
+        exp_pawn_moves.sort();
+        
+        assert_eq!(pawn_moves, exp_pawn_moves);
     }
 
     #[test]
