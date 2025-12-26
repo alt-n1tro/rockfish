@@ -13,6 +13,12 @@ fn main() {
 
         chess_board::print_chess_board(&board);
 
+
+        if pieces_logic::is_insufficient_material(&board) {
+            println!("\n************\n\nInsufficient Material!\n\n************");
+            break 'outer_loop;
+        }
+
         let all_legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
         
         if all_legal_moves_white.len() == 0 {
@@ -43,8 +49,9 @@ fn main() {
             }
         }
         
-        if pieces_logic::is_insufficient_material(&board, false) {
-            println!("\n************\n\nInsufficient Material!\n\n************")
+        if pieces_logic::is_insufficient_material(&board) {
+            println!("\n************\n\nInsufficient Material!\n\n************");
+            break 'outer_loop;
         }
 
         let all_legal_moves_black = pieces_logic::get_all_legal_moves_for_this_turn(&board, false);
@@ -879,7 +886,28 @@ mod tests {
 
     #[test]
     fn insufficient_material_stalemate() {
-        assert!(false);
+        let mut board = chess_board::create_empty_board();
+
+        pieces_logic::place_king_on_board(&mut board, &(7, 4), true);
+        pieces_logic::place_king_on_board(&mut board, &(0, 4), false);
+
+        assert_eq!(true, pieces_logic::is_insufficient_material(&board));
+        
+        pieces_logic::place_pawn_on_board(&mut board, &(6, 7), true);
+
+        assert_eq!(false, pieces_logic::is_insufficient_material(&board));
+        
+        board[6][7] = pieces_logic::create_empty_piece(&(6, 7));
+
+
+        pieces_logic::place_bishop_on_board(&mut board, &(7, 5), true);
+
+        assert_eq!(true, pieces_logic::is_insufficient_material(&board));
+
+        pieces_logic::place_bishop_on_board(&mut board, &(7, 6), true);
+
+        assert_eq!(false, pieces_logic::is_insufficient_material(&board));
+        
     }
 
 }

@@ -643,18 +643,23 @@ pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
     !is_king_in_check(&board, side) && get_all_legal_moves_for_this_turn(&board, side) == output
 }
 
-pub fn is_insufficient_material(board: &[[Piece;8];8], side: bool) -> bool {
+pub fn is_insufficient_material(board: &[[Piece;8];8]) -> bool {
     
-    let mut counts: u8 = 0;
+    let mut white_counts: u8 = 0;
+    let mut black_counts: u8 = 0;
 
     for x in 0..8 {
         for y in 0..8 {
             let piece = board[x][y];
-            if !piece.is_empty && !piece.color == side {
+            if !piece.is_empty && !matches!(piece.symbol, 'k' | 'K') {
                 if matches!(piece.symbol, 'p' | 'P' | 'r' | 'R' | 'q' | 'Q') {
                     return false;
                 } else {
-                    counts += 1;
+                    if piece.color {
+                        white_counts += 1;
+                    } else {
+                        black_counts += 1;
+                    }
                 }
             }
         }
@@ -664,7 +669,7 @@ pub fn is_insufficient_material(board: &[[Piece;8];8], side: bool) -> bool {
     // king + knight + knight = sufficient material! 
     // Essentially, we need to be able to give check on TWO straight squares! Bishop/Knight can
     // only check one square. So, alone they are unable to deliver checkmate.
-    if counts < 3 {
+    if white_counts < 2 && black_counts < 2 {
         return true;
     }
 
