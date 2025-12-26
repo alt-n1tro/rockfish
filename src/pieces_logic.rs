@@ -1,11 +1,9 @@
-use rand::seq::IndexedRandom;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
     pub symbol: char,
     pub has_moved: bool,
-    pub value: u32,
+    pub value: i64,
     pub is_empty: bool,
     pub current_square: (u8, u8),
 }
@@ -19,6 +17,15 @@ pub enum Promotion {
     NoPromotion,
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub enum Symbol {
+    King,
+    Queen,
+    Rook,
+    Bishop,
+    Knight,
+    Pawn,
+}
 
 // This should only ever be created via a function, that checks if the move is actually legal.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -675,6 +682,52 @@ pub fn is_insufficient_material(board: &[[Piece;8];8]) -> bool {
 
     false
 }
+
+
+
+
+
+// Minimax
+pub fn evaluate(board: &[[Piece; 8]; 8]) -> i64 {
+    
+    let mut evaluation: i64 = 0;
+
+    for x in 0..8 {
+        for y in 0..8 {
+            let piece = board[x][y];
+            if piece.color {
+                evaluation += piece.value;
+            } else {
+                evaluation -= piece.value;
+            }
+        }
+    }
+    evaluation
+}
+
+
+pub fn negamax(board: &[[Piece;8];8], node: Move, depth: u8, mut alpha: i64, beta: i64, color: i64) -> i64 {
+    
+    if depth == 0 {
+        return color * evaluate(&board);
+    }    
+    let mut temp_board = *board;
+    make_move(&mut temp_board, &node);
+
+    let child_node: Vec<Move> = find_all_legal_moves_for_a_piece(&temp_board, &node.destination_square);
+    let mut value: i64 = std::i64::MIN;
+
+    for child in child_node {
+        value = std::cmp::max(value, negamax(&board, child, depth-1, -beta, -alpha, -color));
+        alpha = std::cmp::max(alpha, value);
+        if alpha >= beta {
+            break;
+        }
+    }
+    value
+}
+
+
 
 
 

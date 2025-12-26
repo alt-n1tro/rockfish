@@ -4,75 +4,87 @@ mod pieces_logic;
 use rand::seq::IndexedRandom;
 
 fn main() {
-    
-    let mut board = chess_board::initialize_chess_board();
-    
-    let mut buffer_str = String::new();
+   
+
+
+
+
+
+
+
+
+
+
+
+
+   // let mut board = chess_board::initialize_chess_board();
+   // 
+   // let mut buffer_str = String::new();
  
-    'outer_loop: loop {
+   // 'outer_loop: loop {
 
-        chess_board::print_chess_board(&board);
-
-
-        if pieces_logic::is_insufficient_material(&board) {
-            println!("\n************\n\nInsufficient Material!\n\n************");
-            break 'outer_loop;
-        }
-
-        let all_legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
-        
-        if all_legal_moves_white.len() == 0 {
-            if pieces_logic::is_checkmate(&board, true) {
-                println!("\n************\n\nBlack Won!\n\n************")
-            } else {
-                println!("\n************\n\nStalemate!\n\n************")
-            }
-           break 'outer_loop; 
-        }
-        
-        'inner_loop: loop {
-            println!("UCI Moves (i.e. a2a4)\nMake Move: ");
-                
-            buffer_str.clear();
-            let _ = std::io::stdin().read_line(&mut buffer_str);
-        
-            let user_input = pieces_logic::universal_chess_interface_to_move(&board, buffer_str.clone().trim().to_string());
-
-            if user_input.is_ok() {
-                if all_legal_moves_white.contains(user_input.as_ref().unwrap()) {
-                    pieces_logic::make_move(&mut board, &user_input.as_ref().unwrap()); 
-                    break 'inner_loop;
-                }
-                println!("Not a legal move...");
-            } else {
-                println!("{:?}", user_input.err());
-            }
-        }
-        
-        if pieces_logic::is_insufficient_material(&board) {
-            println!("\n************\n\nInsufficient Material!\n\n************");
-            break 'outer_loop;
-        }
-
-        let all_legal_moves_black = pieces_logic::get_all_legal_moves_for_this_turn(&board, false);
-
-        if all_legal_moves_black.len() == 0 {
-            if pieces_logic::is_checkmate(&board, false) {
-                println!("\n************\n\nWhite Won!\n\n************")
-            } else {
-                println!("\n************\n\nStalemate!\n\n************")
-            }
-           break 'outer_loop; 
-        }
-        
-        let black_move = all_legal_moves_black.choose(&mut rand::rng()).unwrap();
-        
-        pieces_logic::make_move(&mut board, black_move);
+   //     chess_board::print_chess_board(&board);
 
 
+   //     if pieces_logic::is_insufficient_material(&board) {
+   //         println!("\n************\n\nInsufficient Material!\n\n************");
+   //         break 'outer_loop;
+   //     }
+
+   //     let all_legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
+   //     
+   //     if all_legal_moves_white.len() == 0 {
+   //         if pieces_logic::is_checkmate(&board, true) {
+   //             println!("\n************\n\nBlack Won!\n\n************")
+   //         } else {
+   //             println!("\n************\n\nStalemate!\n\n************")
+   //         }
+   //        break 'outer_loop; 
+   //     }
+   //     
+   //     'inner_loop: loop {
+   //         println!("UCI Moves (i.e. a2a4)\nMake Move: ");
+   //             
+   //         buffer_str.clear();
+   //         let _ = std::io::stdin().read_line(&mut buffer_str);
+   //     
+   //         let user_input = pieces_logic::universal_chess_interface_to_move(&board, buffer_str.clone().trim().to_string());
+
+   //         if user_input.is_ok() {
+   //             if all_legal_moves_white.contains(user_input.as_ref().unwrap()) {
+   //                 pieces_logic::make_move(&mut board, &user_input.as_ref().unwrap()); 
+   //                 break 'inner_loop;
+   //             }
+   //             println!("Not a legal move...");
+   //         } else {
+   //             println!("{:?}", user_input.err());
+   //         }
+   //     }
+   //     
+   //     if pieces_logic::is_insufficient_material(&board) {
+   //         println!("\n************\n\nInsufficient Material!\n\n************");
+   //         break 'outer_loop;
+   //     }
+
+   //     let all_legal_moves_black = pieces_logic::get_all_legal_moves_for_this_turn(&board, false);
+
+   //     if all_legal_moves_black.len() == 0 {
+   //         if pieces_logic::is_checkmate(&board, false) {
+   //             println!("\n************\n\nWhite Won!\n\n************")
+   //         } else {
+   //             println!("\n************\n\nStalemate!\n\n************")
+   //         }
+   //        break 'outer_loop; 
+   //     }
+   //     
+   //     let black_move = all_legal_moves_black.choose(&mut rand::rng()).unwrap();
+   //     
+   //     pieces_logic::make_move(&mut board, black_move);
 
 
-    }
+
+
+   // }
 
 
 
