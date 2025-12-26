@@ -1,14 +1,15 @@
 mod chess_board;
 mod pieces_logic;
 
-use rand::seq::IndexedRandom;
-
 fn main() {
    
 
 
 
 
+    let mut board = chess_board::initialize_chess_board();
+    
+    
 
 
 

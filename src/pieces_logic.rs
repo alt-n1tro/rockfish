@@ -1,7 +1,7 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: bool,
-    pub symbol: char,
+    pub symbol: Symbol,
     pub has_moved: bool,
     pub value: i64,
     pub is_empty: bool,
@@ -25,6 +25,7 @@ pub enum Symbol {
     Bishop,
     Knight,
     Pawn,
+    Empty,
 }
 
 // This should only ever be created via a function, that checks if the move is actually legal.
@@ -37,11 +38,9 @@ pub struct Move {
 }
 
 
-
-
 pub fn create_empty_piece(square: &(u8, u8)) -> Piece {
     Piece { color: false, 
-        symbol: ' ',
+        symbol: Symbol::Empty,
         has_moved: false,
         value: 0,
         is_empty: true,
@@ -51,12 +50,9 @@ pub fn create_empty_piece(square: &(u8, u8)) -> Piece {
 pub fn place_pawn_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
-        symbol: match color {
-            false => 'p',
-            true => 'P',
-        },
+        symbol: Symbol::Pawn,
         has_moved: false,
-        value: 1,
+        value: 100,
         is_empty: false,
         current_square: *square
     };
@@ -66,12 +62,9 @@ pub fn place_pawn_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color
 pub fn place_bishop_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
-        symbol: match color {
-            false => 'b',
-            true => 'B',
-        },
+        symbol: Symbol::Bishop,
         has_moved: false,
-        value: 3,
+        value: 330,
         is_empty: false,
         current_square: *square
     };
@@ -81,12 +74,9 @@ pub fn place_bishop_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), col
 pub fn place_knight_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
-        symbol: match color {
-            false => 'n',
-            true => 'N',
-        },
+        symbol: Symbol::Knight,
         has_moved: false,
-        value: 3,
+        value: 320,
         is_empty: false,
         current_square: *square
     };
@@ -95,12 +85,9 @@ pub fn place_knight_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), col
 pub fn place_rook_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
-        symbol: match color {
-            false => 'r',
-            true => 'R',
-        },
+        symbol: Symbol::Rook,
         has_moved: false,
-        value: 5,
+        value: 500,
         is_empty: false,
         current_square: *square
     };
@@ -109,12 +96,9 @@ pub fn place_rook_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color
 pub fn place_queen_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
-        symbol: match color {
-            false => 'q',
-            true => 'Q',
-        },
+        symbol: Symbol::Queen,
         has_moved: false,
-        value: 9,
+        value: 900,
         is_empty: false,
         current_square: *square
     };
@@ -123,10 +107,7 @@ pub fn place_queen_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), colo
 pub fn place_king_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
-        symbol: match color {
-            false => 'k',
-            true => 'K',
-        },
+        symbol: Symbol::King,
         has_moved: false,
         value: 10000,
         is_empty: false,
@@ -155,26 +136,26 @@ pub fn get_2d_location_of_board_square(square: &u8) -> (u8, u8) {
 /// color = true (white) ; color = false (black)
 pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
     if color {
-        if board[7][4].symbol == 'K' {
+        if board[7][4].symbol == Symbol::King {
             return (7 as u8, 4 as u8);
         }
         
         for x in (0..8).rev() {
             for y in (0..8).rev() {
-                if board[x][y].symbol == 'K' {
+                if board[x][y].symbol == Symbol::King {
                     return (x as u8, y as u8);
                 }
             }
         }
         unreachable!("\nNo White King was found...\nAt least 2 Kings MUST exist at all times!");
     } else {
-        if board[0][4].symbol == 'k' {
+        if board[0][4].symbol == Symbol::King {
             return (0 as u8, 4 as u8);
         }
         
         for x in 0..8 {
             for y in 0..8 {
-                if board[x][y].symbol == 'k' {
+                if board[x][y].symbol == Symbol::King {
                     return (x as u8, y as u8);
                 }
             }
@@ -208,7 +189,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
         let col = k_s.1 as isize + n_move.1;
         if (row >= 0 && row < 8) && (col >= 0 && col < 8) {
             let square = board[row as usize][col as usize];
-            if  (square.color != king.color) && matches!(square.symbol, 'n' | 'N') {
+            if  (square.color != king.color) && square.symbol == Symbol::Knight {
                 return true;    
             }
         }  
@@ -234,7 +215,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
                 if king.color == square.color {
                     break 'inner_while;
                 } else {
-                    if matches!(square.symbol, 'r' | 'R' | 'q' | 'Q') {
+                    if matches!(square.symbol, Symbol::Rook | Symbol::Queen) {
                         return true;
                     } else {
                         break 'inner_while;
@@ -268,7 +249,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
                 if king.color == square.color {
                     break 'inner_while;
                 } else {
-                    if matches!(square.symbol, 'b' | 'B' | 'q' | 'Q') {
+                    if matches!(square.symbol, Symbol::Bishop | Symbol::Queen) {
                         return true;
                     } else {
                         break 'inner_while;
@@ -292,7 +273,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     if king.color {
         for pawn in black_pawns {
             if pawn.0 >= 0 && pawn.1 < 8 && pawn.1 >= 0{
-                if board[pawn.0 as usize][pawn.1 as usize].symbol == 'p' {
+                if board[pawn.0 as usize][pawn.1 as usize].symbol == Symbol::Pawn {
                     return true;
                 }
             } 
@@ -300,7 +281,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     } else {
         for pawn in white_pawns {
             if pawn.0 < 8 && pawn.1 < 8 && pawn.1 >= 0{
-                if board[pawn.0 as usize][pawn.1 as usize].symbol == 'P' {
+                if board[pawn.0 as usize][pawn.1 as usize].symbol == Symbol::Pawn {
                     return true;
                 }
             } 
@@ -537,7 +518,7 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
         return output;
     }
 
-    if !left_corner.is_empty && matches!(left_corner.symbol, 'r' | 'R') && !left_corner.has_moved {
+    if !left_corner.is_empty && left_corner.symbol == Symbol::Rook && !left_corner.has_moved {
         
         if  board[king.0 as usize][(king.1 - 1) as usize].is_empty &&
             board[king.0 as usize][(king.1 - 2) as usize].is_empty {
@@ -549,7 +530,7 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
         }
     }
     
-    if !right_corner.is_empty && matches!(right_corner.symbol, 'r' | 'R') && !right_corner.has_moved {
+    if !right_corner.is_empty && right_corner.symbol == Symbol::Rook && !right_corner.has_moved {
         
         if  board[king.0 as usize][(king.1 + 1) as usize].is_empty &&
             board[king.0 as usize][(king.1 + 2) as usize].is_empty {
@@ -607,13 +588,13 @@ pub fn find_all_legal_moves_for_a_piece(board: &[[Piece; 8]; 8], square: &(u8, u
     let empty_vec: Vec<Move> = vec![];
 
     match board[square.0 as usize][square.1 as usize].symbol {
-        'p' | 'P' => get_legal_moves_for_pawn(&board, &square),
-        'b' | 'B' => get_legal_moves_for_bishop(&board, &square),
-        'n' | 'N' => get_legal_moves_for_knight(&board, &square),
-        'r' | 'R' => get_legal_moves_for_rook(&board, &square),
-        'q' | 'Q' => get_legal_moves_for_queen(&board, &square),
-        'k' | 'K' => get_legal_moves_for_king(&board, &square),
-        _ => empty_vec,
+        Symbol::Pawn => get_legal_moves_for_pawn(&board, &square),
+        Symbol::Bishop => get_legal_moves_for_bishop(&board, &square),
+        Symbol::Knight => get_legal_moves_for_knight(&board, &square),
+        Symbol::Rook => get_legal_moves_for_rook(&board, &square),
+        Symbol::Queen => get_legal_moves_for_queen(&board, &square),
+        Symbol::King => get_legal_moves_for_king(&board, &square),
+        Symbol::Empty => empty_vec,
     }
 
 }
@@ -658,8 +639,8 @@ pub fn is_insufficient_material(board: &[[Piece;8];8]) -> bool {
     for x in 0..8 {
         for y in 0..8 {
             let piece = board[x][y];
-            if !piece.is_empty && !matches!(piece.symbol, 'k' | 'K') {
-                if matches!(piece.symbol, 'p' | 'P' | 'r' | 'R' | 'q' | 'Q') {
+            if !piece.is_empty && !matches!(piece.symbol, Symbol::King) {
+                if matches!(piece.symbol, Symbol::Pawn | Symbol::Rook | Symbol::Queen) {
                     return false;
                 } else {
                     if piece.color {
@@ -764,13 +745,13 @@ pub fn universal_chess_interface_to_move(board: &[[Piece;8];8], uci: String) -> 
         return Err("Incorrect TO Row! -> 1-8");
     }
 
-    if matches!(board[temp_move.current_square.0 as usize][temp_move.current_square.1 as usize].symbol, 'k' | 'K') {
+    if board[temp_move.current_square.0 as usize][temp_move.current_square.1 as usize].symbol == Symbol::King {
         if (temp_move.current_square.1 as i8 - temp_move.destination_square.1 as i8).abs() == 2 {
             temp_move.castle = true;
         }
     }
 
-    if matches!(board[temp_move.current_square.0 as usize][temp_move.current_square.1 as usize].symbol, 'p' | 'P') {
+    if board[temp_move.current_square.0 as usize][temp_move.current_square.1 as usize].symbol == Symbol::Pawn {
         if temp_move.destination_square.0 == 7 || temp_move.destination_square.0 == 0 {
             if chars.len() > 4 {
                 temp_move.promotion = match chars[4] {
