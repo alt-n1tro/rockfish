@@ -2,90 +2,79 @@ mod chess_board;
 mod pieces_logic;
 
 fn main() {
-   
+  
+    //let mut board = chess_board::initialize_chess_board();
+    //chess_board::print_chess_board(&board);
+
+    //for x in 0..8 {
+    //    for y in 0..8 {
+    //        println!("{:?}", board[x][y]);
+    //    }
+    //}
+
+   let mut board = chess_board::initialize_chess_board();
+   let mut buffer_str = String::new();
+
+    'outer_loop: loop {
+
+       chess_board::print_chess_board(&board);
 
 
+       if pieces_logic::is_insufficient_material(&board) {
+           println!("\n************\n\nInsufficient Material!\n\n************");
+           break 'outer_loop;
+       }
+
+       let all_legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
+       
+       if all_legal_moves_white.len() == 0 {
+           if pieces_logic::is_checkmate(&board, true) {
+               println!("\n************\n\nBlack Won!\n\n************")
+           } else {
+               println!("\n************\n\nStalemate!\n\n************")
+           }
+          break 'outer_loop; 
+       }
+       
+       'inner_loop: loop {
+           println!("UCI Moves (i.e. a2a4)\nMake Move: ");
+               
+           buffer_str.clear();
+           let _ = std::io::stdin().read_line(&mut buffer_str);
+       
+           let user_input = pieces_logic::universal_chess_interface_to_move(&board, buffer_str.clone().trim().to_string());
+
+           if user_input.is_ok() {
+               if all_legal_moves_white.contains(user_input.as_ref().unwrap()) {
+                   pieces_logic::make_move(&mut board, &user_input.as_ref().unwrap()); 
+                   break 'inner_loop;
+               }
+               println!("Not a legal move...");
+           } else {
+               println!("{:?}", user_input.err());
+           }
+       }
+       
+       if pieces_logic::is_insufficient_material(&board) {
+           println!("\n************\n\nInsufficient Material!\n\n************");
+           break 'outer_loop;
+       }
 
 
-    let mut board = chess_board::initialize_chess_board();
-    
-    
+        if pieces_logic::is_checkmate(&board, false) {
+               println!("\n************\n\nWhite Won!\n\n************");
+               break 'outer_loop; 
+        }
+        if pieces_logic::is_stalemate(&board, false){
+               println!("\n************\n\nStalemate!\n\n************");
+               break 'outer_loop;
+        }
+       
+       let black_move = pieces_logic::get_best_move_negamax(&board, 7, false);
+       
+       pieces_logic::make_move(&mut board, &black_move);
 
-
-
-
-
-
-
-
-   // let mut board = chess_board::initialize_chess_board();
-   // 
-   // let mut buffer_str = String::new();
- 
-   // 'outer_loop: loop {
-
-   //     chess_board::print_chess_board(&board);
-
-
-   //     if pieces_logic::is_insufficient_material(&board) {
-   //         println!("\n************\n\nInsufficient Material!\n\n************");
-   //         break 'outer_loop;
-   //     }
-
-   //     let all_legal_moves_white = pieces_logic::get_all_legal_moves_for_this_turn(&board, true);
-   //     
-   //     if all_legal_moves_white.len() == 0 {
-   //         if pieces_logic::is_checkmate(&board, true) {
-   //             println!("\n************\n\nBlack Won!\n\n************")
-   //         } else {
-   //             println!("\n************\n\nStalemate!\n\n************")
-   //         }
-   //        break 'outer_loop; 
-   //     }
-   //     
-   //     'inner_loop: loop {
-   //         println!("UCI Moves (i.e. a2a4)\nMake Move: ");
-   //             
-   //         buffer_str.clear();
-   //         let _ = std::io::stdin().read_line(&mut buffer_str);
-   //     
-   //         let user_input = pieces_logic::universal_chess_interface_to_move(&board, buffer_str.clone().trim().to_string());
-
-   //         if user_input.is_ok() {
-   //             if all_legal_moves_white.contains(user_input.as_ref().unwrap()) {
-   //                 pieces_logic::make_move(&mut board, &user_input.as_ref().unwrap()); 
-   //                 break 'inner_loop;
-   //             }
-   //             println!("Not a legal move...");
-   //         } else {
-   //             println!("{:?}", user_input.err());
-   //         }
-   //     }
-   //     
-   //     if pieces_logic::is_insufficient_material(&board) {
-   //         println!("\n************\n\nInsufficient Material!\n\n************");
-   //         break 'outer_loop;
-   //     }
-
-   //     let all_legal_moves_black = pieces_logic::get_all_legal_moves_for_this_turn(&board, false);
-
-   //     if all_legal_moves_black.len() == 0 {
-   //         if pieces_logic::is_checkmate(&board, false) {
-   //             println!("\n************\n\nWhite Won!\n\n************")
-   //         } else {
-   //             println!("\n************\n\nStalemate!\n\n************")
-   //         }
-   //        break 'outer_loop; 
-   //     }
-   //     
-   //     let black_move = all_legal_moves_black.choose(&mut rand::rng()).unwrap();
-   //     
-   //     pieces_logic::make_move(&mut board, black_move);
-
-
-
-
-   // }
+   }
 
 
 
@@ -105,7 +94,7 @@ mod tests {
     fn create_empty_piece() {
         let empty_square = pieces_logic::Piece {
             color: false,
-            symbol: ' ',
+            symbol: pieces_logic::Symbol::Empty,
             has_moved: false,
             value: 0, 
             is_empty: true,
@@ -328,7 +317,7 @@ mod tests {
     fn is_king_in_check_diagonals() {
         for tup in [(0, 0), (6, 6), (7, 1), (1, 7)] {
         
-            for x in ['B', 'Q'] {
+            for x in [pieces_logic::Symbol::Bishop, pieces_logic::Symbol::Queen] {
             
                 let mut board = chess_board::create_empty_board();
 
@@ -339,7 +328,7 @@ mod tests {
 
                 assert_eq!(true, pieces_logic::is_king_in_check(&board, false));
 
-                for p in ['R', 'N'] {
+                for p in [pieces_logic::Symbol::Rook, pieces_logic::Symbol::Knight] {
                     
                     let mut row: u8 = (tup.0 + 4) >> 1;
                     let col: u8 = (tup.1 + 4) >> 1;

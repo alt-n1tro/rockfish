@@ -273,7 +273,8 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     if king.color {
         for pawn in black_pawns {
             if pawn.0 >= 0 && pawn.1 < 8 && pawn.1 >= 0{
-                if board[pawn.0 as usize][pawn.1 as usize].symbol == Symbol::Pawn {
+                let pawn = board[pawn.0 as usize][pawn.1 as usize];
+                if pawn.symbol == Symbol::Pawn && pawn.color == false {
                     return true;
                 }
             } 
@@ -281,7 +282,8 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     } else {
         for pawn in white_pawns {
             if pawn.0 < 8 && pawn.1 < 8 && pawn.1 >= 0{
-                if board[pawn.0 as usize][pawn.1 as usize].symbol == Symbol::Pawn {
+                let pawn = board[pawn.0 as usize][pawn.1 as usize];
+                if pawn.symbol == Symbol::Pawn && pawn.color == true {
                     return true;
                 }
             } 
@@ -563,9 +565,9 @@ pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
         let shift: i8 = if des_sq.1 > cur_sq.1 {1} else {-1};
         let rook_side: usize = if des_sq.1 > cur_sq.1 {7} else {0};
         
-        board[cur_sq.0 as usize][cur_sq.1 as usize + shift as usize] = board[cur_sq.0 as usize][rook_side];
-        board[cur_sq.0 as usize][cur_sq.1 as usize + shift as usize].current_square = (cur_sq.0, cur_sq.1 + shift as u8);
-        board[cur_sq.0 as usize][cur_sq.1 as usize + shift as usize].has_moved = true;
+        board[cur_sq.0 as usize][(cur_sq.1 as i8 + shift) as usize] = board[cur_sq.0 as usize][rook_side];
+        board[cur_sq.0 as usize][(cur_sq.1 as i8 + shift) as usize].current_square = (cur_sq.0, (cur_sq.1 as i8 + shift) as u8);
+        board[cur_sq.0 as usize][(cur_sq.1 as i8 + shift) as usize].has_moved = true;
 
         board[cur_sq.0 as usize][rook_side] = create_empty_piece(&(cur_sq.0, rook_side as u8));    
     }
@@ -687,19 +689,35 @@ pub fn evaluate(board: &[[Piece; 8]; 8]) -> i64 {
 }
 
 
-pub fn negamax(board: &[[Piece;8];8], node: Move, depth: u8, mut alpha: i64, beta: i64, color: i64) -> i64 {
+pub fn negamax(node: &[[Piece;8];8], depth: u8, mut alpha: i64, beta: i64, side: bool) -> i64 {
     
     if depth == 0 {
-        return color * evaluate(&board);
+        return if side {evaluate(&node)} else {-evaluate(&node)};
     }    
-    let mut temp_board = *board;
-    make_move(&mut temp_board, &node);
 
-    let child_node: Vec<Move> = find_all_legal_moves_for_a_piece(&temp_board, &node.destination_square);
-    let mut value: i64 = std::i64::MIN;
+    
+    let child_nodes: Vec<Move> = get_all_legal_moves_for_this_turn(&node, side);
+    
+    if child_nodes.len() == 0 {
+        // Checkmate else stalemate
+        if is_king_in_check(&node, side) {
+            return -(100_000 - depth as i64);
+        } else {
+            return 0;
+        }
+    }
 
-    for child in child_node {
-        value = std::cmp::max(value, negamax(&board, child, depth-1, -beta, -alpha, -color));
+    if is_insufficient_material(&node) {
+        return 0;
+    }
+
+    let mut value: i64 = -100_000_000;
+
+    for child in child_nodes {
+        let mut temp_board = *node;
+        make_move(&mut temp_board, &child);
+
+        value = std::cmp::max(value, -negamax(&temp_board, depth-1, -beta, -alpha, !side));
         alpha = std::cmp::max(alpha, value);
         if alpha >= beta {
             break;
@@ -709,8 +727,33 @@ pub fn negamax(board: &[[Piece;8];8], node: Move, depth: u8, mut alpha: i64, bet
 }
 
 
+pub fn get_best_move_negamax(node: &[[Piece;8];8], depth: u8, side_to_move: bool) -> Move {
+    
+    let child_nodes: Vec<Move> = get_all_legal_moves_for_this_turn(&node, side_to_move);
+    
+    let mut alpha: i64 = -100_000_000;
+    let beta: i64 = 100_000_000;
 
+    let mut best_move: Move = child_nodes[0];
+    let mut best_value: i64 = -100_000_000;
 
+    for child in child_nodes {
+        let mut temp_board = *node;
+        make_move(&mut temp_board, &child);
+
+        let value = -negamax(&temp_board, depth-1, -beta, -alpha, !side_to_move);
+
+        if value > best_value {
+            best_value = value;
+            best_move = child;
+        }
+        println!("{:?} -> {}", child, value);
+        
+        alpha = std::cmp::max(alpha, value);
+    
+    }
+    best_move
+}
 
 
 // Communication

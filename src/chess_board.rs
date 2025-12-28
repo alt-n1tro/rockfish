@@ -50,9 +50,9 @@ pub fn initialize_chess_board() -> [[pieces_logic::Piece; 8]; 8] {
     }
     
     // Black side
-    pieces_logic::place_rook_on_board(&mut ouput, &(0, 1), false);
-    pieces_logic::place_knight_on_board(&mut ouput, &(0, 2), false);
-    pieces_logic::place_bishop_on_board(&mut ouput, &(0, 3), false);
+    pieces_logic::place_rook_on_board(&mut ouput, &(0, 0), false);
+    pieces_logic::place_knight_on_board(&mut ouput, &(0, 1), false);
+    pieces_logic::place_bishop_on_board(&mut ouput, &(0, 2), false);
     pieces_logic::place_queen_on_board(&mut ouput, &(0, 3), false);
     pieces_logic::place_king_on_board(&mut ouput, &(0, 4), false);
     pieces_logic::place_bishop_on_board(&mut ouput, &(0, 5), false);
@@ -69,9 +69,9 @@ pub fn initialize_chess_board() -> [[pieces_logic::Piece; 8]; 8] {
         pieces_logic::place_pawn_on_board(&mut ouput, &(6, y), true);
     }
     
-    pieces_logic::place_rook_on_board(&mut ouput, &(7, 1), true);
-    pieces_logic::place_knight_on_board(&mut ouput, &(7, 2), true);
-    pieces_logic::place_bishop_on_board(&mut ouput, &(7, 3), true);
+    pieces_logic::place_rook_on_board(&mut ouput, &(7, 0), true);
+    pieces_logic::place_knight_on_board(&mut ouput, &(7, 1), true);
+    pieces_logic::place_bishop_on_board(&mut ouput, &(7, 2), true);
     pieces_logic::place_queen_on_board(&mut ouput, &(7, 3), true);
     pieces_logic::place_king_on_board(&mut ouput, &(7, 4), true);
     pieces_logic::place_bishop_on_board(&mut ouput, &(7, 5), true);
