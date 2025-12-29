@@ -1,10 +1,9 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
-    pub color: bool,
+    pub color: Color,
     pub symbol: Symbol,
     pub has_moved: bool,
     pub value: i64,
-    pub is_empty: bool,
     pub current_square: (u8, u8),
 }
 
@@ -17,7 +16,7 @@ pub enum Promotion {
     NoPromotion,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
 pub enum Symbol {
     King,
     Queen,
@@ -26,6 +25,14 @@ pub enum Symbol {
     Knight,
     Pawn,
     Empty,
+}
+
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub enum Color {
+    White,
+    Black,
+    None,
 }
 
 // This should only ever be created via a function, that checks if the move is actually legal.
@@ -39,78 +46,71 @@ pub struct Move {
 
 
 pub fn create_empty_piece(square: &(u8, u8)) -> Piece {
-    Piece { color: false, 
+    Piece { color: Color::None, 
         symbol: Symbol::Empty,
         has_moved: false,
         value: 0,
-        is_empty: true,
         current_square: *square }
 }
 
-pub fn place_pawn_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+pub fn place_pawn_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: Color) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
         symbol: Symbol::Pawn,
         has_moved: false,
         value: 100,
-        is_empty: false,
         current_square: *square
     };
 
 }
 
-pub fn place_bishop_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+pub fn place_bishop_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: Color) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
         symbol: Symbol::Bishop,
         has_moved: false,
         value: 330,
-        is_empty: false,
         current_square: *square
     };
     
 }
 
-pub fn place_knight_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+pub fn place_knight_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: Color) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
         symbol: Symbol::Knight,
         has_moved: false,
         value: 320,
-        is_empty: false,
         current_square: *square
     };
 }
 
-pub fn place_rook_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+pub fn place_rook_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: Color) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
         symbol: Symbol::Rook,
         has_moved: false,
         value: 500,
-        is_empty: false,
         current_square: *square
     };
 }
 
-pub fn place_queen_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+pub fn place_queen_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: Color) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
         symbol: Symbol::Queen,
         has_moved: false,
         value: 900,
-        is_empty: false,
         current_square: *square
     };
 }
 
-pub fn place_king_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: bool) {
+pub fn place_king_on_board(board: &mut [[Piece; 8]; 8], square: &(u8, u8), color: Color) {
     board[square.0 as usize][square.1 as usize] = Piece {
         color: color,
         symbol: Symbol::King,
         has_moved: false,
         value: 10000,
-        is_empty: false,
         current_square: *square
     };
 }
@@ -134,8 +134,8 @@ pub fn get_2d_location_of_board_square(square: &u8) -> (u8, u8) {
 // 
 /// Takes a reference to the board (since we're just doing a lookup here).
 /// color = true (white) ; color = false (black)
-pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
-    if color {
+pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: Color) -> (u8, u8) {
+    if color == Color::White {
         if board[7][4].symbol == Symbol::King {
             return (7 as u8, 4 as u8);
         }
@@ -167,7 +167,7 @@ pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: bool) -> (u8, u8) {
 
 
 // This function looks outward from the king -- Not from the enemy pieces!
-pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
+pub fn is_king_in_check(board: &[[Piece;8];8], color: Color) -> bool {
     
     let k_s: (u8, u8) = get_square_of_king(&board, color);
     let king: Piece = board[k_s.0 as usize][k_s.1 as usize];
@@ -211,7 +211,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
             
             let square = &board[row as usize][col as usize];
 
-            if !square.is_empty {
+            if square.symbol != Symbol::Empty {
                 if king.color == square.color {
                     break 'inner_while;
                 } else {
@@ -244,7 +244,7 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
             
             let square = &board[bishop_row as usize][bishop_col as usize];
 
-            if !square.is_empty {
+            if square.symbol != Symbol::Empty {
                 
                 if king.color == square.color {
                     break 'inner_while;
@@ -270,11 +270,11 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
     let white_pawns: [(i8, i8);2] = [((k_s.0 as i8 + 1), (k_s.1 as i8 + 1)),
                                     ((k_s.0 as i8 + 1), (k_s.1 as i8 - 1))];
     // Check Pawns 
-    if king.color {
+    if king.color == Color::White {
         for pawn in black_pawns {
             if pawn.0 >= 0 && pawn.1 < 8 && pawn.1 >= 0{
                 let pawn = board[pawn.0 as usize][pawn.1 as usize];
-                if pawn.symbol == Symbol::Pawn && pawn.color == false {
+                if pawn.symbol == Symbol::Pawn && pawn.color == Color::Black {
                     return true;
                 }
             } 
@@ -283,13 +283,12 @@ pub fn is_king_in_check(board: &[[Piece;8];8], color: bool) -> bool {
         for pawn in white_pawns {
             if pawn.0 < 8 && pawn.1 < 8 && pawn.1 >= 0{
                 let pawn = board[pawn.0 as usize][pawn.1 as usize];
-                if pawn.symbol == Symbol::Pawn && pawn.color == true {
+                if pawn.symbol == Symbol::Pawn && pawn.color == Color::White {
                     return true;
                 }
             } 
         }
     }
-
 
     return false;
 }
@@ -324,7 +323,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         
     let piece_to_move = board[square.0 as usize][square.1 as usize];
 
-    let adder: i8 = if piece_to_move.color {
+    let adder: i8 = if piece_to_move.color == Color::White {
         -1
     } else {
         1
@@ -333,12 +332,12 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
     let new_row = square.0 as i8 + adder;
 
     if new_row >= 0 && new_row < 8 { 
-        if board[new_row as usize][square.1 as usize].is_empty {
+        if board[new_row as usize][square.1 as usize].symbol == Symbol::Empty {
             let up_move: Move = Move {current_square: *square, destination_square: (new_row as u8, square.1), castle: false, promotion: Promotion::NoPromotion};
             if !is_piece_pinned(&board, &up_move) {
                 output.push(up_move);
                 if (new_row + adder) >= 0 && (new_row + adder) < 8 {
-                    if board[(new_row + adder) as usize][square.1 as usize].is_empty && !piece_to_move.has_moved {
+                    if board[(new_row + adder) as usize][square.1 as usize].symbol == Symbol::Empty && !piece_to_move.has_moved {
                         let up_up_move: Move = Move { current_square: *square, destination_square: ((new_row + adder) as u8, square.1), castle: false, promotion: Promotion::NoPromotion};
                         output.push(up_up_move); 
                     }
@@ -349,7 +348,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         // right capture
         if square.1 < 7 {
             let board_square = board[new_row as usize][(square.1 + 1) as usize];
-            if board_square.color != piece_to_move.color && !board_square.is_empty {
+            if board_square.color != piece_to_move.color && board_square.symbol != Symbol::Empty {
                 let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1), castle: false, promotion: Promotion::NoPromotion};
                 if !is_piece_pinned(&board, &left_move) {
                     output.push(left_move);
@@ -359,7 +358,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         // left capture
         if square.1 >= 1 {
             let board_square = board[new_row as usize][(square.1 - 1) as usize];
-            if board_square.color != piece_to_move.color && !board_square.is_empty {
+            if board_square.color != piece_to_move.color && board_square.symbol != Symbol::Empty {
                 let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1), castle: false, promotion: Promotion::NoPromotion};
                 if !is_piece_pinned(&board, &right_move) {
                     output.push(right_move);
@@ -368,17 +367,17 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         }
     }
 
-    if new_row == 0 || new_row == 7 {
-        let mut temp_output: Vec<Move> = vec![];
-        for pawn_move in &output {
-            let mut temp_pawn_move = *pawn_move;
-            for x in [Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight] {
-                temp_pawn_move.promotion = x;
-                temp_output.push(temp_pawn_move);
-            }
-        }
-        return temp_output;
-    }
+//    if new_row == 0 || new_row == 7 {
+//        let mut temp_output: Vec<Move> = vec![];
+//        for pawn_move in &output {
+//            let mut temp_pawn_move = *pawn_move;
+//            for x in [Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight] {
+//                temp_pawn_move.promotion = x;
+//                temp_output.push(temp_pawn_move);
+//            }
+//        }
+//        return temp_output;
+//    }
 
     output
 }
@@ -398,7 +397,7 @@ pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> V
         let col = knight.1 + square.1 as isize;
         if row >= 0 && row < 8 && col >= 0 && col < 8 {
             let to_sqr = board[row as usize][col as usize];
-            if to_sqr.is_empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) {
+            if to_sqr.symbol == Symbol::Empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) {
                 let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: Promotion::NoPromotion};
                 if !is_piece_pinned(&board, &knight_move) {
                     output.push(knight_move);
@@ -423,7 +422,7 @@ pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), move
             
             let proposed_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: Promotion::NoPromotion};
 
-            if !destination_square.is_empty && destination_square.color == piece_color {  
+            if destination_square.symbol != Symbol::Empty && destination_square.color == piece_color {  
                 break 'inner_while; 
             }
                 
@@ -431,7 +430,7 @@ pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), move
                 output.push(proposed_move);
             }
 
-            if !destination_square.is_empty {
+            if destination_square.symbol != Symbol::Empty {
                 break 'inner_while;
             }                
             
@@ -487,7 +486,7 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
 
             let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: Promotion::NoPromotion};
             
-            if board_square.is_empty {
+            if board_square.symbol == Symbol::Empty {
                 if !is_piece_pinned(&board, &k_move) {
                     output.push(k_move);
                 }
@@ -505,14 +504,14 @@ pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
 }
 
 
-pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
+pub fn get_castling_moves(board: &[[Piece;8];8], color: Color) -> Vec<Move> {
     
     let king = get_square_of_king(&board, color);
     let king_piece = board[king.0 as usize][king.1 as usize];
 
     let mut output: Vec<Move> = vec![];
 
-    let row: usize = if color {7} else {0};
+    let row: usize = if color == Color::None {7} else {0};
     let left_corner: Piece = board[row][0];
     let right_corner: Piece = board[row][7];
 
@@ -520,10 +519,10 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
         return output;
     }
 
-    if !left_corner.is_empty && left_corner.symbol == Symbol::Rook && !left_corner.has_moved {
+    if left_corner.symbol != Symbol::Empty && left_corner.symbol == Symbol::Rook && !left_corner.has_moved {
         
-        if  board[king.0 as usize][(king.1 - 1) as usize].is_empty &&
-            board[king.0 as usize][(king.1 - 2) as usize].is_empty {
+        if  board[king.0 as usize][(king.1 - 1) as usize].symbol == Symbol::Empty &&
+            board[king.0 as usize][(king.1 - 2) as usize].symbol == Symbol::Empty {
             // Check for pins 
             if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 1), castle: false, promotion: Promotion::NoPromotion }) &&
                 !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 - 2), castle: false, promotion: Promotion::NoPromotion }) {
@@ -532,10 +531,10 @@ pub fn get_castling_moves(board: &[[Piece;8];8], color: bool) -> Vec<Move> {
         }
     }
     
-    if !right_corner.is_empty && right_corner.symbol == Symbol::Rook && !right_corner.has_moved {
+    if right_corner.symbol != Symbol::Empty && right_corner.symbol == Symbol::Rook && !right_corner.has_moved {
         
-        if  board[king.0 as usize][(king.1 + 1) as usize].is_empty &&
-            board[king.0 as usize][(king.1 + 2) as usize].is_empty {
+        if  board[king.0 as usize][(king.1 + 1) as usize].symbol == Symbol::Empty &&
+            board[king.0 as usize][(king.1 + 2) as usize].symbol == Symbol::Empty {
             // Check for pins 
             if  !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 1), castle: false, promotion: Promotion::NoPromotion }) &&
                 !is_piece_pinned(&board, &Move { current_square: king, destination_square: (king.0, king.1 + 2), castle: false, promotion: Promotion::NoPromotion }) {
@@ -559,7 +558,6 @@ pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
     board[des_sq.0 as usize][des_sq.1 as usize].current_square = des_sq;
     board[des_sq.0 as usize][des_sq.1 as usize].has_moved = true;
     
-    board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
 
     if move_.castle {
         let shift: i8 = if des_sq.1 > cur_sq.1 {1} else {-1};
@@ -579,6 +577,9 @@ pub fn make_move(board: &mut [[Piece; 8]; 8], move_: &Move) {
         Promotion::Knight => place_knight_on_board(board, &move_.destination_square, board[move_.current_square.0 as usize][move_.current_square.1 as usize].color),
         Promotion::NoPromotion => {},
     };
+
+
+    board[cur_sq.0 as usize][cur_sq.1 as usize] = create_empty_piece(&cur_sq);
 
 }
 
@@ -601,14 +602,14 @@ pub fn find_all_legal_moves_for_a_piece(board: &[[Piece; 8]; 8], square: &(u8, u
 
 }
 
-pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: bool) -> Vec<Move> {
+pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: Color) -> Vec<Move> {
 
     let mut output: Vec<Move> = vec![];
     
     for x in 0..8 {
         for y in 0..8 {
             let board_square: Piece = board[x][y];
-            if board_square.color == side && !board_square.is_empty { 
+            if board_square.color == side && board_square.symbol != Symbol::Empty { 
                 output.extend(find_all_legal_moves_for_a_piece(&board, &(x as u8, y as u8)));
             }
         }
@@ -619,14 +620,14 @@ pub fn get_all_legal_moves_for_this_turn(board: &[[Piece;8];8], side: bool) -> V
 
 
 // Game States
-pub fn is_checkmate(board: &[[Piece; 8]; 8], side: bool) -> bool {
+pub fn is_checkmate(board: &[[Piece; 8]; 8], side: Color) -> bool {
 
     let output: Vec<Move> = vec![];
 
     is_king_in_check(&board, side) && get_all_legal_moves_for_this_turn(&board, side) == output
 }
 
-pub fn is_stalemate(board: &[[Piece; 8]; 8], side: bool) -> bool {
+pub fn is_stalemate(board: &[[Piece; 8]; 8], side: Color) -> bool {
 
     let output: Vec<Move> = vec![];
 
@@ -641,11 +642,11 @@ pub fn is_insufficient_material(board: &[[Piece;8];8]) -> bool {
     for x in 0..8 {
         for y in 0..8 {
             let piece = board[x][y];
-            if !piece.is_empty && !matches!(piece.symbol, Symbol::King) {
+            if piece.symbol != Symbol::Empty && !matches!(piece.symbol, Symbol::King) {
                 if matches!(piece.symbol, Symbol::Pawn | Symbol::Rook | Symbol::Queen) {
                     return false;
                 } else {
-                    if piece.color {
+                    if piece.color == Color::White {
                         white_counts += 1;
                     } else {
                         black_counts += 1;
@@ -678,7 +679,7 @@ pub fn evaluate(board: &[[Piece; 8]; 8]) -> i64 {
     for x in 0..8 {
         for y in 0..8 {
             let piece = board[x][y];
-            if piece.color {
+            if piece.color == Color::White {
                 evaluation += piece.value;
             } else {
                 evaluation -= piece.value;
@@ -689,10 +690,10 @@ pub fn evaluate(board: &[[Piece; 8]; 8]) -> i64 {
 }
 
 
-pub fn negamax(node: &[[Piece;8];8], depth: u8, mut alpha: i64, beta: i64, side: bool) -> i64 {
+pub fn negamax(node: &[[Piece;8];8], depth: u8, mut alpha: i64, beta: i64, side: Color) -> i64 {
     
     if depth == 0 {
-        return if side {evaluate(&node)} else {-evaluate(&node)};
+        return if side == Color::White {evaluate(&node)} else {-evaluate(&node)};
     }    
 
     
@@ -717,7 +718,7 @@ pub fn negamax(node: &[[Piece;8];8], depth: u8, mut alpha: i64, beta: i64, side:
         let mut temp_board = *node;
         make_move(&mut temp_board, &child);
 
-        value = std::cmp::max(value, -negamax(&temp_board, depth-1, -beta, -alpha, !side));
+        value = std::cmp::max(value, -negamax(&temp_board, depth-1, -beta, -alpha, if side == Color::White {Color::Black} else {Color::White}));
         alpha = std::cmp::max(alpha, value);
         if alpha >= beta {
             break;
@@ -727,7 +728,7 @@ pub fn negamax(node: &[[Piece;8];8], depth: u8, mut alpha: i64, beta: i64, side:
 }
 
 
-pub fn get_best_move_negamax(node: &[[Piece;8];8], depth: u8, side_to_move: bool) -> Move {
+pub fn get_best_move_negamax(node: &[[Piece;8];8], depth: u8, side_to_move: Color) -> Move {
     
     let child_nodes: Vec<Move> = get_all_legal_moves_for_this_turn(&node, side_to_move);
     
@@ -741,13 +742,12 @@ pub fn get_best_move_negamax(node: &[[Piece;8];8], depth: u8, side_to_move: bool
         let mut temp_board = *node;
         make_move(&mut temp_board, &child);
 
-        let value = -negamax(&temp_board, depth-1, -beta, -alpha, !side_to_move);
+        let value = -negamax(&temp_board, depth-1, -beta, -alpha, if side_to_move == Color::White {Color::Black} else {Color::White});
 
         if value > best_value {
             best_value = value;
             best_move = child;
         }
-        println!("{:?} -> {}", child, value);
         
         alpha = std::cmp::max(alpha, value);
     
