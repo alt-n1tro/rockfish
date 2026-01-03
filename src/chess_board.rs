@@ -32,12 +32,30 @@ pub fn print_chess_board(board_layout: &[[pieces_logic::Piece;8];8]) {
         print!("{} |", 8-x);
         for y in 0..8 {
             let piece = board_layout[x][y];
-            print!(" {} |", get_char_symbol_for_symbol_enum(piece.symbol, piece.color));
+            print!(" {} |", get_char_symbol_for_symbol_enum(piece.symbol, if piece.color == pieces_logic::Color::White {true} else {false}));
         }
         println!("\n{}", seperator);
     }
     println!("    a   b   c   d   e   f   g   h");
 }
+
+pub fn initialize_pawn_galore_board() -> [[pieces_logic::Piece; 8]; 8] {
+
+    let mut board = initialize_chess_board();
+    
+    for row in [0, 7] {
+        for y in 0..8 {
+            pieces_logic::place_pawn_on_board(&mut board, &(row as u8, y as u8), if row == 0 {pieces_logic::Color::Black} else {pieces_logic::Color::White});
+        }
+    }
+
+    pieces_logic::place_king_on_board(&mut board, &(7, 4), pieces_logic::Color::White);
+    pieces_logic::place_king_on_board(&mut board, &(0, 4), pieces_logic::Color::Black);
+
+    board
+}
+
+
 
 pub fn initialize_chess_board() -> [[pieces_logic::Piece; 8]; 8] {
     
@@ -50,33 +68,33 @@ pub fn initialize_chess_board() -> [[pieces_logic::Piece; 8]; 8] {
     }
     
     // Black side
-    pieces_logic::place_rook_on_board(&mut ouput, &(0, 0), false);
-    pieces_logic::place_knight_on_board(&mut ouput, &(0, 1), false);
-    pieces_logic::place_bishop_on_board(&mut ouput, &(0, 2), false);
-    pieces_logic::place_queen_on_board(&mut ouput, &(0, 3), false);
-    pieces_logic::place_king_on_board(&mut ouput, &(0, 4), false);
-    pieces_logic::place_bishop_on_board(&mut ouput, &(0, 5), false);
-    pieces_logic::place_knight_on_board(&mut ouput, &(0, 6), false);
-    pieces_logic::place_rook_on_board(&mut ouput, &(0, 7), false);
+    pieces_logic::place_rook_on_board(&mut ouput, &(0, 0), pieces_logic::Color::Black);
+    pieces_logic::place_knight_on_board(&mut ouput, &(0, 1), pieces_logic::Color::Black);
+    pieces_logic::place_bishop_on_board(&mut ouput, &(0, 2), pieces_logic::Color::Black);
+    pieces_logic::place_queen_on_board(&mut ouput, &(0, 3),  pieces_logic::Color::Black);
+    pieces_logic::place_king_on_board(&mut ouput, &(0, 4),   pieces_logic::Color::Black);
+    pieces_logic::place_bishop_on_board(&mut ouput, &(0, 5), pieces_logic::Color::Black);
+    pieces_logic::place_knight_on_board(&mut ouput, &(0, 6), pieces_logic::Color::Black);
+    pieces_logic::place_rook_on_board(&mut ouput, &(0, 7),   pieces_logic::Color::Black);
 
     for y in 0..8 {
-        pieces_logic::place_pawn_on_board(&mut ouput, &(1, y), false);
+        pieces_logic::place_pawn_on_board(&mut ouput, &(1, y), pieces_logic::Color::Black);
     }
 
 
     // White side
     for y in 0..8 {
-        pieces_logic::place_pawn_on_board(&mut ouput, &(6, y), true);
+        pieces_logic::place_pawn_on_board(&mut ouput, &(6, y), pieces_logic::Color::White);
     }
     
-    pieces_logic::place_rook_on_board(&mut ouput, &(7, 0), true);
-    pieces_logic::place_knight_on_board(&mut ouput, &(7, 1), true);
-    pieces_logic::place_bishop_on_board(&mut ouput, &(7, 2), true);
-    pieces_logic::place_queen_on_board(&mut ouput, &(7, 3), true);
-    pieces_logic::place_king_on_board(&mut ouput, &(7, 4), true);
-    pieces_logic::place_bishop_on_board(&mut ouput, &(7, 5), true);
-    pieces_logic::place_knight_on_board(&mut ouput, &(7, 6), true);
-    pieces_logic::place_rook_on_board(&mut ouput, &(7, 7), true);
+    pieces_logic::place_rook_on_board(&mut ouput, &(7, 0),   pieces_logic::Color::White);
+    pieces_logic::place_knight_on_board(&mut ouput, &(7, 1), pieces_logic::Color::White);
+    pieces_logic::place_bishop_on_board(&mut ouput, &(7, 2), pieces_logic::Color::White);
+    pieces_logic::place_queen_on_board(&mut ouput, &(7, 3),  pieces_logic::Color::White);
+    pieces_logic::place_king_on_board(&mut ouput, &(7, 4),   pieces_logic::Color::White);
+    pieces_logic::place_bishop_on_board(&mut ouput, &(7, 5), pieces_logic::Color::White);
+    pieces_logic::place_knight_on_board(&mut ouput, &(7, 6), pieces_logic::Color::White);
+    pieces_logic::place_rook_on_board(&mut ouput, &(7, 7),   pieces_logic::Color::White);
 
     ouput
 }

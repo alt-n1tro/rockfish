@@ -1,3 +1,20 @@
+use std::sync::atomic::{AtomicU64, Ordering};
+use crate::chess_board;
+static NODES_EVALUATED: AtomicU64 = AtomicU64::new(0);
+
+pub fn nodes_reset() {
+    NODES_EVALUATED.store(0, Ordering::Relaxed);
+}
+
+pub fn nodes_inc() {
+    NODES_EVALUATED.fetch_add(1, Ordering::Relaxed);
+}
+
+pub fn nodes_get() -> u64 {
+    NODES_EVALUATED.load(Ordering::Relaxed)
+}
+
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece {
     pub color: Color,
@@ -135,33 +152,27 @@ pub fn get_2d_location_of_board_square(square: &u8) -> (u8, u8) {
 /// Takes a reference to the board (since we're just doing a lookup here).
 /// color = true (white) ; color = false (black)
 pub fn get_square_of_king(board: &[[Piece; 8]; 8], color: Color) -> (u8, u8) {
+
     if color == Color::White {
-        if board[7][4].symbol == Symbol::King {
+        if board[7][4].symbol == Symbol::King && board[7][4].color == Color::White {
             return (7 as u8, 4 as u8);
         }
-        
-        for x in (0..8).rev() {
-            for y in (0..8).rev() {
-                if board[x][y].symbol == Symbol::King {
-                    return (x as u8, y as u8);
-                }
-            }
-        }
-        unreachable!("\nNo White King was found...\nAt least 2 Kings MUST exist at all times!");
     } else {
-        if board[0][4].symbol == Symbol::King {
+        if board[0][4].symbol == Symbol::King && board[0][4].color == Color::Black {
             return (0 as u8, 4 as u8);
         }
-        
-        for x in 0..8 {
-            for y in 0..8 {
-                if board[x][y].symbol == Symbol::King {
-                    return (x as u8, y as u8);
-                }
+    }
+
+    for x in (0..8).rev() {
+        for y in (0..8).rev() {
+            let piece = board[x][y];
+            if piece.symbol == Symbol::King && piece.color == color {
+                return (x as u8, y as u8);
             }
         }
-        unreachable!("\nNo Black King was found...\nAt least 2 Kings MUST exist at all times!");
     }
+    chess_board::print_chess_board(&board);
+    unreachable!("\nNo King was found...\nAt least 2 Kings MUST exist at all times!"); 
 }
 
 
@@ -348,7 +359,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         // right capture
         if square.1 < 7 {
             let board_square = board[new_row as usize][(square.1 + 1) as usize];
-            if board_square.color != piece_to_move.color && board_square.symbol != Symbol::Empty {
+            if board_square.color != piece_to_move.color && board_square.symbol != Symbol::Empty && board_square.symbol != Symbol::King {
                 let left_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 + 1), castle: false, promotion: Promotion::NoPromotion};
                 if !is_piece_pinned(&board, &left_move) {
                     output.push(left_move);
@@ -358,7 +369,7 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         // left capture
         if square.1 >= 1 {
             let board_square = board[new_row as usize][(square.1 - 1) as usize];
-            if board_square.color != piece_to_move.color && board_square.symbol != Symbol::Empty {
+            if board_square.color != piece_to_move.color && board_square.symbol != Symbol::Empty && board_square.symbol != Symbol::King {
                 let right_move: Move = Move { current_square: *square, destination_square: (new_row as u8, square.1 - 1), castle: false, promotion: Promotion::NoPromotion};
                 if !is_piece_pinned(&board, &right_move) {
                     output.push(right_move);
@@ -367,17 +378,17 @@ pub fn get_legal_moves_for_pawn(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec
         }
     }
 
-//    if new_row == 0 || new_row == 7 {
-//        let mut temp_output: Vec<Move> = vec![];
-//        for pawn_move in &output {
-//            let mut temp_pawn_move = *pawn_move;
-//            for x in [Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight] {
-//                temp_pawn_move.promotion = x;
-//                temp_output.push(temp_pawn_move);
-//            }
-//        }
-//        return temp_output;
-//    }
+    if new_row == 0 || new_row == 7 {
+        let mut temp_output: Vec<Move> = vec![];
+        for pawn_move in &output {
+            let mut temp_pawn_move = *pawn_move;
+            for x in [Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight] {
+                temp_pawn_move.promotion = x;
+                temp_output.push(temp_pawn_move);
+            }
+        }
+        return temp_output;
+    }
 
     output
 }
@@ -397,7 +408,7 @@ pub fn get_legal_moves_for_knight(board: &[[Piece;8];8], square: &(u8, u8)) -> V
         let col = knight.1 + square.1 as isize;
         if row >= 0 && row < 8 && col >= 0 && col < 8 {
             let to_sqr = board[row as usize][col as usize];
-            if to_sqr.symbol == Symbol::Empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) {
+            if to_sqr.symbol == Symbol::Empty || (to_sqr.color != board[square.0 as usize][square.1 as usize].color) && to_sqr.symbol != Symbol::King {
                 let knight_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: Promotion::NoPromotion};
                 if !is_piece_pinned(&board, &knight_move) {
                     output.push(knight_move);
@@ -424,6 +435,10 @@ pub fn get_legal_long_ray_moves(board: &[[Piece; 8]; 8], square: &(u8, u8), move
 
             if destination_square.symbol != Symbol::Empty && destination_square.color == piece_color {  
                 break 'inner_while; 
+            }
+
+            if destination_square.symbol == Symbol::King && destination_square.color != piece_color {
+                break 'inner_while;
             }
                 
             if !is_piece_pinned(&board, &proposed_move) {
@@ -468,39 +483,163 @@ pub fn get_legal_moves_for_queen(board: &[[Piece;8];8], square: &(u8, u8)) -> Ve
 }
 
 
-pub fn get_legal_moves_for_king(board: &[[Piece;8];8], square: &(u8, u8)) -> Vec<Move> {
-    
-    let king_moves: [(i8, i8); 8] = [(1, 1), (1, 0), (1, -1),
-                                     (0, 1), (0, -1),
-                                     (-1, 1), (-1, 0), (-1, -1)];
-    
-    let mut output: Vec<Move> = vec![];
+pub fn get_legal_moves_for_king(board: &[[Piece; 8]; 8], square: &(u8, u8)) -> Vec<Move> {
+    let king = board[square.0 as usize][square.1 as usize];
+    let side = king.color;
 
-    for king_move in king_moves {
-        let row: i8 = square.0 as i8 + king_move.0;
-        let col: i8 = square.1 as i8 + king_move.1;
-        
-        if row >= 0 && row < 8 && col >= 0 && col < 8 {
-            let board_square = board[row as usize][col as usize];
-            let piece_square = board[square.0 as usize][square.1 as usize];
+    // Sanity
+    if king.symbol != Symbol::King || side == Color::None {
+        return vec![];
+    }
 
-            let k_move: Move = Move { current_square: *square, destination_square: (row as u8, col as u8), castle: false, promotion: Promotion::NoPromotion};
-            
-            if board_square.symbol == Symbol::Empty {
-                if !is_piece_pinned(&board, &k_move) {
-                    output.push(k_move);
+    let opp = if side == Color::White { Color::Black } else { Color::White };
+
+    // Find opponent king once (for adjacency rule)
+    let mut opp_king_sq: Option<(u8, u8)> = None;
+    'find: for r in 0..8 {
+        for c in 0..8 {
+            let p = board[r][c];
+            if p.symbol == Symbol::King && p.color == opp {
+                opp_king_sq = Some((r as u8, c as u8));
+                break 'find;
+            }
+        }
+    }
+
+    #[inline]
+    fn in_bounds(r: i8, c: i8) -> bool {
+        (0..=7).contains(&r) && (0..=7).contains(&c)
+    }
+
+    let is_adjacent_to_opp_king = |to: (u8, u8)| -> bool {
+        if let Some(ok) = opp_king_sq {
+            let dr = (to.0 as i16 - ok.0 as i16).abs();
+            let dc = (to.1 as i16 - ok.1 as i16).abs();
+            dr <= 1 && dc <= 1
+        } else {
+            false
+        }
+    };
+
+    let mut out = Vec::new();
+
+    // Normal king steps
+    for dr in -1..=1 {
+        for dc in -1..=1 {
+            if dr == 0 && dc == 0 {
+                continue;
+            }
+
+            let nr = square.0 as i8 + dr;
+            let nc = square.1 as i8 + dc;
+            if !in_bounds(nr, nc) {
+                continue;
+            }
+
+            let to = (nr as u8, nc as u8);
+            let dst = board[to.0 as usize][to.1 as usize];
+
+            // Can't land on own piece
+            if dst.color == side {
+                continue;
+            }
+
+            // King is not capturable (never allow a move that "captures" a king)
+            if dst.symbol == Symbol::King {
+                continue;
+            }
+
+            // Kings may never be adjacent
+            if is_adjacent_to_opp_king(to) {
+                continue;
+            }
+
+            let mv = Move {
+                current_square: *square,
+                destination_square: to,
+                castle: false,
+                promotion: Promotion::NoPromotion,
+            };
+
+            // Must not move into check
+            let mut tmp = *board;
+            make_move(&mut tmp, &mv);
+            if is_king_in_check(&tmp, side) {
+                continue;
+            }
+
+            out.push(mv);
+        }
+    }
+
+    // Castling
+    // Conditions:
+    // - King/rook unmoved
+    // - King not currently in check
+    // - Squares between are empty
+    // - Squares king crosses/lands on are not attacked
+    // - Not adjacent to enemy king on destination/crossing squares
+    let home_row = if side == Color::White { 7 } else { 0 };
+
+    if square.0 == home_row && square.1 == 4 && !king.has_moved {
+        if !is_king_in_check(board, side) {
+            let king_safe_on = |to_col: u8| -> bool {
+                let mv = Move {
+                    current_square: *square,
+                    destination_square: (home_row, to_col),
+                    castle: false,
+                    promotion: Promotion::NoPromotion,
+                };
+                let mut tmp = *board;
+                make_move(&mut tmp, &mv);
+
+                if is_king_in_check(&tmp, side) {
+                    return false;
                 }
-            } else {
-                if board_square.color != piece_square.color && !is_piece_pinned(&board, &k_move) {
-                    output.push(k_move);
+                if is_adjacent_to_opp_king((home_row, to_col)) {
+                    return false;
+                }
+                true
+            };
+
+            // Kingside: e -> g, rook h -> f
+            let rook_h = board[home_row as usize][7];
+            if rook_h.symbol == Symbol::Rook && rook_h.color == side && !rook_h.has_moved {
+                if board[home_row as usize][5].symbol == Symbol::Empty
+                    && board[home_row as usize][6].symbol == Symbol::Empty
+                {
+                    if king_safe_on(5) && king_safe_on(6) {
+                        out.push(Move {
+                            current_square: *square,
+                            destination_square: (home_row, 6),
+                            castle: true,
+                            promotion: Promotion::NoPromotion,
+                        });
+                    }
+                }
+            }
+
+            // Queenside: e -> c, rook a -> d
+            let rook_a = board[home_row as usize][0];
+            if rook_a.symbol == Symbol::Rook && rook_a.color == side && !rook_a.has_moved {
+                if board[home_row as usize][1].symbol == Symbol::Empty
+                    && board[home_row as usize][2].symbol == Symbol::Empty
+                    && board[home_row as usize][3].symbol == Symbol::Empty
+                {
+                    if king_safe_on(3) && king_safe_on(2) {
+                        out.push(Move {
+                            current_square: *square,
+                            destination_square: (home_row, 2),
+                            castle: true,
+                            promotion: Promotion::NoPromotion,
+                        });
+                    }
                 }
             }
         }
     }
 
-    output.extend(get_castling_moves(&board, board[square.0 as usize][square.1 as usize].color));
-    
-    output
+    out
 }
 
 
@@ -667,93 +806,602 @@ pub fn is_insufficient_material(board: &[[Piece;8];8]) -> bool {
     false
 }
 
+// *** AI GENERATED *** 
+// ============================================================================
+// FAST “BEST MOVE” SEARCH STACK (high N/s)
+// TT + Zobrist + PVS Negamax + Iterative Deepening
+// ============================================================================
 
+#[inline]
+fn opponent(side: Color) -> Color {
+    match side {
+        Color::White => Color::Black,
+        Color::Black => Color::White,
+        Color::None => Color::None,
+    }
+}
 
+// =========================
+// TRANSPOSITION TABLE
+// =========================
 
+#[derive(Clone, Copy)]
+pub enum TtFlag {
+    Exact,
+    LowerBound,
+    UpperBound,
+}
 
-// Minimax
-pub fn evaluate(board: &[[Piece; 8]; 8]) -> i64 {
-    
-    let mut evaluation: i64 = 0;
+#[derive(Clone, Copy)]
+pub struct TtEntry {
+    pub key: u64,
+    pub depth: u8,
+    pub value: i64,
+    pub flag: TtFlag,
+    pub best: Move,
+    pub best_valid: bool,
+}
 
-    for x in 0..8 {
-        for y in 0..8 {
-            let piece = board[x][y];
-            if piece.color == Color::White {
-                evaluation += piece.value;
-            } else {
-                evaluation -= piece.value;
+pub struct TranspositionTable {
+    mask: usize,
+    table: Vec<TtEntry>,
+}
+
+#[inline]
+fn empty_move() -> Move {
+    Move {
+        current_square: (0, 0),
+        destination_square: (0, 0),
+        castle: false,
+        promotion: Promotion::NoPromotion,
+    }
+}
+
+impl TranspositionTable {
+    pub fn new_pow2(entries_pow2: usize) -> Self {
+        let size = 1usize << entries_pow2;
+        let empty = TtEntry {
+            key: 0,
+            depth: 0,
+            value: 0,
+            flag: TtFlag::Exact,
+            best: empty_move(),
+            best_valid: false,
+        };
+        Self {
+            mask: size - 1,
+            table: vec![empty; size],
+        }
+    }
+
+    #[inline]
+    pub fn probe(&self, key: u64) -> Option<TtEntry> {
+        let e = self.table[(key as usize) & self.mask];
+        if e.key == key && e.key != 0 {
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    pub fn store(&mut self, entry: TtEntry) {
+        let idx = (entry.key as usize) & self.mask;
+        let cur = self.table[idx];
+
+        if cur.key == 0 || entry.depth >= cur.depth {
+            self.table[idx] = entry;
+        }
+    }
+}
+
+// =========================
+// ZOBRIST HASHING
+// =========================
+
+pub struct Zobrist {
+    piece: [[u64; 24]; 64],
+    side_to_move: u64,
+}
+
+#[inline]
+fn splitmix64(mut x: u64) -> u64 {
+    x = x.wrapping_add(0x9E3779B97F4A7C15);
+    let mut z = x;
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+    z ^ (z >> 31)
+}
+
+impl Zobrist {
+    pub fn new() -> Self {
+        let mut seed = 0xC0FFEE_u64;
+        let mut piece = [[0u64; 24]; 64];
+
+        for sq in 0..64 {
+            for k in 0..24 {
+                seed = splitmix64(seed);
+                piece[sq][k] = seed;
+            }
+        }
+
+        seed = splitmix64(seed);
+        let side_to_move = seed;
+
+        Self { piece, side_to_move }
+    }
+}
+
+#[inline]
+fn piece_index(p: Piece) -> Option<usize> {
+    if p.symbol == Symbol::Empty || p.color == Color::None {
+        return None;
+    }
+
+    let s = match p.symbol {
+        Symbol::Pawn => 0,
+        Symbol::Knight => 1,
+        Symbol::Bishop => 2,
+        Symbol::Rook => 3,
+        Symbol::Queen => 4,
+        Symbol::King => 5,
+        _ => return None,
+    };
+
+    let c = match p.color {
+        Color::White => 0,
+        Color::Black => 1,
+        _ => return None,
+    };
+
+    let m = if p.has_moved { 1 } else { 0 };
+
+    Some(((s * 2 + c) * 2 + m) as usize)
+}
+
+#[inline]
+pub fn zobrist_hash(board: &[[Piece; 8]; 8], side: Color, z: &Zobrist) -> u64 {
+    let mut h = 0u64;
+    for r in 0..8 {
+        for c in 0..8 {
+            if let Some(pi) = piece_index(board[r][c]) {
+                h ^= z.piece[r * 8 + c][pi];
             }
         }
     }
-    evaluation
+    if side == Color::Black {
+        h ^= z.side_to_move;
+    }
+    h
 }
 
+#[inline]
+pub fn hash_after_move(
+    mut h: u64,
+    board: &[[Piece; 8]; 8],
+    mv: &Move,
+    side: Color,
+    z: &Zobrist,
+) -> u64 {
+    let (fr, fc) = mv.current_square;
+    let (tr, tc) = mv.destination_square;
 
-pub fn negamax(node: &[[Piece;8];8], depth: u8, mut alpha: i64, beta: i64, side: Color) -> i64 {
-    
-    if depth == 0 {
-        return if side == Color::White {evaluate(&node)} else {-evaluate(&node)};
-    }    
+    let from = fr as usize * 8 + fc as usize;
+    let to = tr as usize * 8 + tc as usize;
 
-    
-    let child_nodes: Vec<Move> = get_all_legal_moves_for_this_turn(&node, side);
-    
-    if child_nodes.len() == 0 {
-        // Checkmate else stalemate
-        if is_king_in_check(&node, side) {
-            return -(100_000 - depth as i64);
-        } else {
-            return 0;
+    let mut moving = board[fr as usize][fc as usize];
+    let target = board[tr as usize][tc as usize];
+
+    if let Some(pi) = piece_index(moving) {
+        h ^= z.piece[from][pi];
+    }
+
+    if let Some(pi) = piece_index(target) {
+        h ^= z.piece[to][pi];
+    }
+
+    if moving.symbol == Symbol::Pawn {
+        match mv.promotion {
+            Promotion::Queen => moving.symbol = Symbol::Queen,
+            Promotion::Rook => moving.symbol = Symbol::Rook,
+            Promotion::Bishop => moving.symbol = Symbol::Bishop,
+            Promotion::Knight => moving.symbol = Symbol::Knight,
+            Promotion::NoPromotion => {}
         }
     }
 
-    if is_insufficient_material(&node) {
-        return 0;
+    moving.has_moved = true;
+
+    if let Some(pi) = piece_index(moving) {
+        h ^= z.piece[to][pi];
     }
 
-    let mut value: i64 = -100_000_000;
+    if mv.castle {
+        let row = fr as usize;
+        let rook_from = if tc > fc { 7 } else { 0 };
+        let rook_to = if tc > fc { 5 } else { 3 };
 
-    for child in child_nodes {
-        let mut temp_board = *node;
-        make_move(&mut temp_board, &child);
+        let rook = board[row][rook_from];
+        if let Some(pi) = piece_index(rook) {
+            h ^= z.piece[row * 8 + rook_from][pi];
+        }
 
-        value = std::cmp::max(value, -negamax(&temp_board, depth-1, -beta, -alpha, if side == Color::White {Color::Black} else {Color::White}));
-        alpha = std::cmp::max(alpha, value);
+        let mut rook2 = rook;
+        rook2.has_moved = true;
+        if let Some(pi) = piece_index(rook2) {
+            h ^= z.piece[row * 8 + rook_to][pi];
+        }
+    }
+
+    h ^ z.side_to_move
+}
+
+// =========================
+// SOFT MOVE ORDERING
+// =========================
+
+#[inline]
+fn val(sym: Symbol) -> i32 {
+    match sym {
+        Symbol::Pawn => 100,
+        Symbol::Knight => 320,
+        Symbol::Bishop => 330,
+        Symbol::Rook => 500,
+        Symbol::Queen => 900,
+        Symbol::King => 100_000,
+        _ => 0,
+    }
+}
+
+#[inline]
+fn is_tactical(board: &[[Piece; 8]; 8], mv: &Move) -> bool {
+    mv.castle
+        || mv.promotion != Promotion::NoPromotion
+        || board[mv.destination_square.0 as usize][mv.destination_square.1 as usize].symbol
+            != Symbol::Empty
+}
+
+#[inline]
+fn soft_score(board: &[[Piece; 8]; 8], mv: &Move) -> i32 {
+    let from = mv.current_square;
+    let to = mv.destination_square;
+
+    let mover = board[from.0 as usize][from.1 as usize];
+    let target = board[to.0 as usize][to.1 as usize];
+
+    let mut s = 0;
+
+    if mv.promotion != Promotion::NoPromotion {
+        s += 20_000;
+    }
+
+    if target.symbol != Symbol::Empty {
+        s += 10_000 + val(target.symbol) - val(mover.symbol) / 10;
+    }
+
+    if mv.castle {
+        s += 2_000;
+    }
+
+    s
+}
+
+#[inline]
+pub fn order_moves_soft_in_negamax(board: &[[Piece; 8]; 8], moves: &mut Vec<Move>) {
+    let mut i = 0;
+    for j in 0..moves.len() {
+        if is_tactical(board, &moves[j]) {
+            moves.swap(i, j);
+            i += 1;
+        }
+    }
+    moves[..i].sort_unstable_by(|a, b| soft_score(board, b).cmp(&soft_score(board, a)));
+}
+
+// =========================
+// NEGAMAX + TT + PVS
+// =========================
+
+pub fn negamax_tt_pvs(
+    node: &[[Piece; 8]; 8],
+    depth: u8,
+    mut alpha: i64,
+    beta: i64,
+    side: Color,
+    hash: u64,
+    z: &Zobrist,
+    tt: &mut TranspositionTable,
+) -> i64 {
+    nodes_inc();
+
+    let alpha_orig = alpha;
+
+    if let Some(e) = tt.probe(hash) {
+        if e.depth >= depth {
+            match e.flag {
+                TtFlag::Exact => return e.value,
+                TtFlag::LowerBound if e.value >= beta => return e.value,
+                TtFlag::UpperBound if e.value <= alpha => return e.value,
+                _ => {}
+            }
+        }
+    }
+
+    if depth == 0 {
+        return if side == Color::White {
+            evaluate(node)
+        } else {
+            -evaluate(node)
+        };
+    }
+
+    let mut moves = get_all_legal_moves_for_this_turn(node, side);
+
+    if moves.is_empty() {
+        return if is_king_in_check(node, side) {
+            -(1_000_000_000 - depth as i64)
+        } else {
+            0
+        };
+    }
+
+    if let Some(e) = tt.probe(hash) {
+        if e.best_valid {
+            if let Some(p) = moves.iter().position(|m| *m == e.best) {
+                moves.swap(0, p);
+            }
+        }
+    }
+
+    order_moves_soft_in_negamax(node, &mut moves);
+
+    let mut best = -100_000_000;
+    let mut best_move = moves[0];
+    let mut first = true;
+
+    for mv in moves.iter() {
+        let child_hash = hash_after_move(hash, node, mv, side, z);
+
+        let mut tmp = *node;
+        make_move(&mut tmp, mv);
+
+        let score = if first {
+            first = false;
+            -negamax_tt_pvs(&tmp, depth - 1, -beta, -alpha, opponent(side), child_hash, z, tt)
+        } else {
+            let mut s =
+                -negamax_tt_pvs(&tmp, depth - 1, -(alpha + 1), -alpha, opponent(side), child_hash, z, tt);
+            if s > alpha && s < beta {
+                s = -negamax_tt_pvs(&tmp, depth - 1, -beta, -alpha, opponent(side), child_hash, z, tt);
+            }
+            s
+        };
+
+        if score > best {
+            best = score;
+            best_move = *mv;
+        }
+        if score > alpha {
+            alpha = score;
+        }
         if alpha >= beta {
             break;
         }
     }
-    value
+
+    let flag = if best <= alpha_orig {
+        TtFlag::UpperBound
+    } else if best >= beta {
+        TtFlag::LowerBound
+    } else {
+        TtFlag::Exact
+    };
+
+    tt.store(TtEntry {
+        key: hash,
+        depth,
+        value: best,
+        flag,
+        best: best_move,
+        best_valid: true,
+    });
+
+    best
 }
 
+// =========================
+// ROOT SEARCH (ITERATIVE)
+// =========================
 
-pub fn get_best_move_negamax(node: &[[Piece;8];8], depth: u8, side_to_move: Color) -> Move {
-    
-    let child_nodes: Vec<Move> = get_all_legal_moves_for_this_turn(&node, side_to_move);
-    
-    let mut alpha: i64 = -100_000_000;
-    let beta: i64 = 100_000_000;
+pub fn get_best_move_iterative_tt(
+    node: &[[Piece; 8]; 8],
+    depth: u8,
+    side: Color,
+) -> Move {
+    let z = Zobrist::new();
+    let mut tt = TranspositionTable::new_pow2(20);
 
-    let mut best_move: Move = child_nodes[0];
-    let mut best_value: i64 = -100_000_000;
+    let root_hash = zobrist_hash(node, side, &z);
+    let mut moves = get_all_legal_moves_for_this_turn(node, side);
 
-    for child in child_nodes {
-        let mut temp_board = *node;
-        make_move(&mut temp_board, &child);
-
-        let value = -negamax(&temp_board, depth-1, -beta, -alpha, if side_to_move == Color::White {Color::Black} else {Color::White});
-
-        if value > best_value {
-            best_value = value;
-            best_move = child;
-        }
-        
-        alpha = std::cmp::max(alpha, value);
-    
+    if moves.is_empty() {
+        return empty_move();
     }
+
+    order_moves_soft_in_negamax(node, &mut moves);
+
+    let mut best_move = moves[0];
+
+    for d in 1..=depth {
+        let mut alpha = -100_000_000;
+        let beta = 100_000_000;
+
+        if let Some(e) = tt.probe(root_hash) {
+            if e.best_valid {
+                if let Some(p) = moves.iter().position(|m| *m == e.best) {
+                    moves.swap(0, p);
+                }
+            }
+        }
+
+        for mv in moves.iter() {
+            let child_hash = hash_after_move(root_hash, node, mv, side, &z);
+            let mut tmp = *node;
+            make_move(&mut tmp, mv);
+
+            let score = -negamax_tt_pvs(
+                &tmp,
+                d.saturating_sub(1),
+                -beta,
+                -alpha,
+                opponent(side),
+                child_hash,
+                &z,
+                &mut tt,
+            );
+
+            if score > alpha {
+                alpha = score;
+                best_move = *mv;
+            }
+        }
+
+        tt.store(TtEntry {
+            key: root_hash,
+            depth: d,
+            value: alpha,
+            flag: TtFlag::Exact,
+            best: best_move,
+            best_valid: true,
+        });
+    }
+
     best_move
 }
+
+// =========================
+// FAST STATIC EVALUATION
+// White perspective (+ = good for White)
+// =========================
+
+#[inline(always)]
+fn piece_value(sym: Symbol) -> i64 {
+    match sym {
+        Symbol::Pawn   => 100,
+        Symbol::Knight => 320,
+        Symbol::Bishop => 330,
+        Symbol::Rook   => 500,
+        Symbol::Queen  => 900,
+        Symbol::King   => 0,   // king safety handled elsewhere
+        _ => 0,
+    }
+}
+
+// Simple piece-square tables (from White's perspective)
+// Indexed as [row][col], row 0 = White back rank
+const PAWN_PST: [[i64; 8]; 8] = [
+    [  0,  0,  0,  0,  0,  0,  0,  0 ],
+    [ 50, 50, 50, 50, 50, 50, 50, 50 ],
+    [ 10, 10, 20, 30, 30, 20, 10, 10 ],
+    [  5,  5, 10, 25, 25, 10,  5,  5 ],
+    [  0,  0,  0, 20, 20,  0,  0,  0 ],
+    [  5, -5,-10,  0,  0,-10, -5,  5 ],
+    [  5, 10, 10,-20,-20, 10, 10,  5 ],
+    [  0,  0,  0,  0,  0,  0,  0,  0 ],
+];
+
+const KNIGHT_PST: [[i64; 8]; 8] = [
+    [-50,-40,-30,-30,-30,-30,-40,-50],
+    [-40,-20,  0,  5,  5,  0,-20,-40],
+    [-30,  5, 10, 15, 15, 10,  5,-30],
+    [-30,  0, 15, 20, 20, 15,  0,-30],
+    [-30,  5, 15, 20, 20, 15,  5,-30],
+    [-30,  0, 10, 15, 15, 10,  0,-30],
+    [-40,-20,  0,  0,  0,  0,-20,-40],
+    [-50,-40,-30,-30,-30,-30,-40,-50],
+];
+
+const BISHOP_PST: [[i64; 8]; 8] = [
+    [-20,-10,-10,-10,-10,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5, 10, 10,  5,  0,-10],
+    [-10,  5,  5, 10, 10,  5,  5,-10],
+    [-10,  0, 10, 10, 10, 10,  0,-10],
+    [-10, 10, 10, 10, 10, 10, 10,-10],
+    [-10,  5,  0,  0,  0,  0,  5,-10],
+    [-20,-10,-10,-10,-10,-10,-10,-20],
+];
+
+const ROOK_PST: [[i64; 8]; 8] = [
+    [  0,  0,  0,  5,  5,  0,  0,  0 ],
+    [ -5,  0,  0,  0,  0,  0,  0, -5 ],
+    [ -5,  0,  0,  0,  0,  0,  0, -5 ],
+    [ -5,  0,  0,  0,  0,  0,  0, -5 ],
+    [ -5,  0,  0,  0,  0,  0,  0, -5 ],
+    [ -5,  0,  0,  0,  0,  0,  0, -5 ],
+    [  5, 10, 10, 10, 10, 10, 10,  5 ],
+    [  0,  0,  0,  0,  0,  0,  0,  0 ],
+];
+
+const QUEEN_PST: [[i64; 8]; 8] = [
+    [-20,-10,-10, -5, -5,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5,  5,  5,  5,  0,-10],
+    [ -5,  0,  5,  5,  5,  5,  0, -5],
+    [  0,  0,  5,  5,  5,  5,  0, -5],
+    [-10,  5,  5,  5,  5,  5,  0,-10],
+    [-10,  0,  5,  0,  0,  0,  0,-10],
+    [-20,-10,-10, -5, -5,-10,-10,-20],
+];
+
+#[inline(always)]
+fn pst_bonus(sym: Symbol, row: usize, col: usize) -> i64 {
+    match sym {
+        Symbol::Pawn   => PAWN_PST[row][col],
+        Symbol::Knight => KNIGHT_PST[row][col],
+        Symbol::Bishop => BISHOP_PST[row][col],
+        Symbol::Rook   => ROOK_PST[row][col],
+        Symbol::Queen  => QUEEN_PST[row][col],
+        _ => 0,
+    }
+}
+
+/// Main evaluation entry point
+/// White perspective: positive = good for White
+pub fn evaluate(board: &[[Piece; 8]; 8]) -> i64 {
+    let mut score: i64 = 0;
+
+    for r in 0..8 {
+        for c in 0..8 {
+            let p = board[r][c];
+            if p.symbol == Symbol::Empty || p.color == Color::None {
+                continue;
+            }
+
+            let base = piece_value(p.symbol);
+            let pst = if p.color == Color::White {
+                pst_bonus(p.symbol, r, c)
+            } else {
+                // mirror vertically for Black
+                pst_bonus(p.symbol, 7 - r, c)
+            };
+
+            let piece_score = base + pst;
+
+            if p.color == Color::White {
+                score += piece_score;
+            } else {
+                score -= piece_score;
+            }
+        }
+    }
+
+    score
+}
+
+
+// *** AI GENERATED *** 
+
 
 
 // Communication
